@@ -13,17 +13,15 @@ LangGraph; then 5a: 50 harder cases; then v3 repo context; RAG dropped, see
 `.scratch/step-5/spec.md`) → 6 service + GitHub Action → 6.5 learning from PRs →
 7 MCP server → 8 Cloud Run → 9 README + dashboard.
 
-**Current step: 5b (improvements on the current 30 cases), in progress.** Plan and decisions:
-`.scratch/step-5/spec.md`, tickets in `.scratch/step-5/issues/`. Order: 5b (v1_1 threshold,
-v1 x mimo-v2.6-flash, v2 grouping rule, v2_1 LangGraph detect -> verify) on the current
-cases, then 5a (+50 harder cases, reviewed in 5 batches of 10), then every config re-run on
-the larger dev split for the README. Built: config thresholds, `report --as-config`,
-case-set hash in results, runner `--model/--provider`, configs v1_1, v2, v2_1. Step 0 is done
-(`docs/prior-art.md`). The v1 dev row (commit 6e5320b) scored recall 100% (n=8), precision
-96%, 0 false alarms on 11 clean PRs: the current cases are too easy, so 5b can only measure
-cost, latency, duplicates, calibration and stability. The test split has not been run.
-Cases: 30, all `reviewed: true`, 19 dev / 11 test, hand-edited in place (no generator in
-the repo). Update this line when a step is done.
+**Current step: 5a (+50 harder cases), not started; begin with its design round** (adapted-case
+rules, test-split timing). 5b is done on the current 30 cases (dev, 3 runs each, case set
+231e5725a20e41ba except the first v1 file): v1 pro recall 100% / precision 96%; v1_1
+(threshold 0.7) identical; v1 x mimo-v2.6-flash 100% / 86%, 4x cheaper; v2 100% / 100%; v2_1
+96% / 96% with p95 latency 34.5s. No row had a false alarm on the 11 clean PRs, so threshold
+and verify can't show value until 5a. After 5a, every config is re-run on the larger dev
+split for the README. Plan: `.scratch/step-5/spec.md`. Step 0 is done (`docs/prior-art.md`).
+The test split has not been run. Cases: 30, all `reviewed: true`, 19 dev / 11 test,
+hand-edited in place (no generator in the repo). Update this line when a step is done.
 
 Domain terms are in `GLOSSARY.md`; decisions are in `docs/adr/`. Read both before changing
 `benchmark/`.
