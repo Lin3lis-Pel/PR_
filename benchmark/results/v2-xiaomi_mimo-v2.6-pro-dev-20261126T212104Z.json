@@ -1,0 +1,1724 @@
+{
+  "config": "v2",
+  "model": "xiaomi/mimo-v2.6-pro",
+  "provider": "xiaomi",
+  "split": "dev",
+  "git_commit": "4b5890c4fbfe8313126e40885e302be099973220",
+  "case_set": "366451e5dd773413",
+  "dirty": false,
+  "started_at": "2026-11-26T21:21:04.606781Z",
+  "finished_at": "2026-11-26T21:22:51.298146Z",
+  "stopped_early": null,
+  "runs": [
+    {
+      "results": [
+        {
+          "case_id": "neg-004",
+          "findings": [],
+          "error": null,
+          "cost_usd": 0.0002059356,
+          "latency_s": 1.7266486000007717,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1310,
+              "output_tokens": 26,
+              "cost_usd": 0.0002059356,
+              "cost_method": "reported",
+              "latency_s": 1.7266486000007717,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "neg-005",
+          "findings": [],
+          "error": null,
+          "cost_usd": 0.0002050656,
+          "latency_s": 1.7251689000004262,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1314,
+              "output_tokens": 23,
+              "cost_usd": 0.0002050656,
+              "cost_method": "reported",
+              "latency_s": 1.7251689000004262,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "neg-006",
+          "findings": [],
+          "error": null,
+          "cost_usd": 0.0002155056,
+          "latency_s": 1.8658145999979752,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1324,
+              "output_tokens": 30,
+              "cost_usd": 0.0002155056,
+              "cost_method": "reported",
+              "latency_s": 1.8658145999979752,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "neg-008",
+          "findings": [],
+          "error": null,
+          "cost_usd": 0.0000459072,
+          "latency_s": 2.1004914000004646,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1172,
+              "output_tokens": 38,
+              "cost_usd": 0.0000459072,
+              "cost_method": "reported",
+              "latency_s": 2.1004914000004646,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "neg-009",
+          "findings": [],
+          "error": null,
+          "cost_usd": 0.0001963656,
+          "latency_s": 1.1995017000008374,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1298,
+              "output_tokens": 21,
+              "cost_usd": 0.0001963656,
+              "cost_method": "reported",
+              "latency_s": 1.1995017000008374,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "neg-010",
+          "findings": [],
+          "error": null,
+          "cost_usd": 0.0000694488,
+          "latency_s": 2.0186358999999356,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1442,
+              "output_tokens": 57,
+              "cost_usd": 0.0000694488,
+              "cost_method": "reported",
+              "latency_s": 2.0186358999999356,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "neg-011",
+          "findings": [],
+          "error": null,
+          "cost_usd": 0.0005026056,
+          "latency_s": 1.941059500000847,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1962,
+              "output_tokens": 41,
+              "cost_usd": 0.0005026056,
+              "cost_method": "reported",
+              "latency_s": 1.941059500000847,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "pos-erasure-001",
+          "findings": [
+            {
+              "file": "accounts/services.py",
+              "line": 10,
+              "side": "old",
+              "category": "ERASURE_REGRESSION",
+              "confidence": 0.9,
+              "article": "Art. 17",
+              "explanation": "The deletion flow no longer calls anonymise_orders(user) before deleting the user and customer records, so any personal data held on the user's orders (e.g. delivery name/address, contact details) is now retained in identifiable form after the account is erased. The removed import shows the anonymisation step is gone entirely, not relocated elsewhere.",
+              "suggested_fix": "Restore the anonymise_orders(user) call inside the transaction before user.customer.delete(), or move order anonymisation into a still-invoked deletion path so orders are stripped of personal data on account erasure."
+            }
+          ],
+          "error": null,
+          "cost_usd": 0.0005426256,
+          "latency_s": 7.42018150000149,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1324,
+              "output_tokens": 406,
+              "cost_usd": 0.0005426256,
+              "cost_method": "reported",
+              "latency_s": 7.42018150000149,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "pos-erasure-003",
+          "findings": [
+            {
+              "file": "src/main/java/com/acme/shop/account/UserAccountService.java",
+              "line": 19,
+              "side": "new",
+              "category": "ERASURE_REGRESSION",
+              "confidence": 0.8,
+              "article": "Art. 17",
+              "explanation": "The hard delete of the user account is replaced by a soft delete (setDeleted(true) + save), so all personal data held on the UserAccount row (e.g. name, email) is retained indefinitely instead of erased. The new findByIdAndDeletedFalse query confirms rows are kept and merely filtered out.",
+              "suggested_fix": "Either keep the hard delete, or when marking the account deleted also anonymise/null out its personal fields (or schedule a purge job that permanently deletes the row after a defined retention period)."
+            }
+          ],
+          "error": null,
+          "cost_usd": 0.000395238,
+          "latency_s": 7.991614900001878,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1384,
+              "output_tokens": 397,
+              "cost_usd": 0.000395238,
+              "cost_method": "reported",
+              "latency_s": 7.991614900001878,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "pos-logging-001",
+          "findings": [
+            {
+              "file": "accounts/views.py",
+              "line": 17,
+              "side": "new",
+              "category": "PII_LOGGING",
+              "confidence": 0.95,
+              "article": "Art. 5(1)(c)",
+              "explanation": "The new log statement writes the user's email address (a direct identifier) to application logs at INFO level, with no masking or pseudonymisation.",
+              "suggested_fix": "Log a non-identifying value instead, e.g. the internal user id: `logger.info(\"New signup: %s via %s\", user.id, form.cleaned_data[\"source\"])`."
+            }
+          ],
+          "error": null,
+          "cost_usd": 0.0004230006,
+          "latency_s": 3.763314399999217,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1477,
+              "output_tokens": 192,
+              "cost_usd": 0.0004230006,
+              "cost_method": "reported",
+              "latency_s": 3.763314399999217,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "pos-logging-002",
+          "findings": [
+            {
+              "file": "src/checkout/checkout.controller.ts",
+              "line": 10,
+              "side": "new",
+              "category": "PII_LOGGING",
+              "confidence": 0.88,
+              "article": "Art. 5(1)(c)",
+              "explanation": "The new error handler logs the entire checkout request body (`payload: req.body`), which will contain customer personal data such as name, email, shipping address and possibly payment details, written in full to the application logs on every failed checkout.",
+              "suggested_fix": "Log only a non-personal correlation value (e.g. orderId/userId or a request ID) and drop the raw payload, or redact the personal fields before logging."
+            }
+          ],
+          "error": null,
+          "cost_usd": 0.0007840506,
+          "latency_s": 18.706112900003063,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1271,
+              "output_tokens": 710,
+              "cost_usd": 0.0007840506,
+              "cost_method": "reported",
+              "latency_s": 18.706112900003063,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "pos-logging-004",
+          "findings": [
+            {
+              "file": "billing/views.py",
+              "line": 15,
+              "side": "new",
+              "category": "PII_LOGGING",
+              "confidence": 0.95,
+              "article": "Art. 5(1)(c)",
+              "explanation": "The new log statement writes the customer's full name and contact (email/phone) to the application log via describe_customer(), i.e. direct identifiers end up in log files with no masking or redaction.",
+              "suggested_fix": "Log only the refund's internal identifier (e.g. `logger.info(\"refund %s issued\", pending.pk)`) and drop the describe_customer() call from the log statement."
+            }
+          ],
+          "error": null,
+          "cost_usd": 0.0005039106,
+          "latency_s": 3.249661899997591,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1393,
+              "output_tokens": 327,
+              "cost_usd": 0.0005039106,
+              "cost_method": "reported",
+              "latency_s": 3.249661899997591,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "pos-logging-005",
+          "findings": [
+            {
+              "file": "src/middleware/auth.ts",
+              "line": 11,
+              "side": "new",
+              "category": "THIRD_PARTY_TRANSFER",
+              "confidence": 0.9,
+              "article": "Art. 5(1)(c)",
+              "explanation": "The new `Sentry.setUser` call attaches the user's email address (a direct identifier) to every request's Sentry context, transmitting it to Sentry's external error-tracking service along with `username`. This sends personal data to a third party where a pseudonymous identifier would suffice.",
+              "suggested_fix": "Send only the internal user id (e.g. `Sentry.setUser({ id: user.id })`) or hash the email with a keyed HMAC before attaching it to Sentry context."
+            }
+          ],
+          "error": null,
+          "cost_usd": 0.0008653956,
+          "latency_s": 7.665364299999055,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1204,
+              "output_tokens": 837,
+              "cost_usd": 0.0008653956,
+              "cost_method": "reported",
+              "latency_s": 7.665364299999055,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "pos-storage-001",
+          "findings": [
+            {
+              "file": "customers/models.py",
+              "line": 7,
+              "side": "new",
+              "category": "PII_STORAGE",
+              "confidence": 0.95,
+              "article": "Art. 5(1)(e)",
+              "explanation": "The Customer model gains two direct identifiers, phone_number and date_of_birth, stored as plain, unencrypted fields with no accompanying retention or purge rule. Phone number and date of birth are personal data, and DOB in particular is quasi-identifying when combined with the existing name field.",
+              "suggested_fix": "Encrypt both fields at rest (e.g., a Django EncryptedCharField/EncryptedDateField or equivalent application-level encryption) and add a documented retention rule (e.g., a purge job that deletes or anonymises these fields after the customer relationship ends or after a fixed period)."
+            }
+          ],
+          "error": null,
+          "cost_usd": 0.0003796296,
+          "latency_s": 8.659146000001783,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1546,
+              "output_tokens": 425,
+              "cost_usd": 0.0003796296,
+              "cost_method": "reported",
+              "latency_s": 8.659146000001783,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "pos-storage-003",
+          "findings": [
+            {
+              "file": "src/main/java/com/acme/clinic/patient/Patient.java",
+              "line": 21,
+              "side": "new",
+              "category": "PII_STORAGE",
+              "confidence": 0.9,
+              "article": "Art. 9(1)",
+              "explanation": "A new `diagnosis` field is added to the Patient entity, storing health data (a special category of personal data) in the database. The field is neither encrypted at rest nor covered by any retention rule in this change.",
+              "suggested_fix": "Encrypt the diagnosis column at rest (e.g. JPA AttributeConverter with AES or DB-level TDE) and add a retention/purge rule limiting how long diagnosis data is kept."
+            }
+          ],
+          "error": null,
+          "cost_usd": 0.0004899906,
+          "latency_s": 5.676129199997376,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1455,
+              "output_tokens": 280,
+              "cost_usd": 0.0004899906,
+              "cost_method": "reported",
+              "latency_s": 5.676129199997376,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "pos-transfer-001",
+          "findings": [
+            {
+              "file": "integrations/crm.py",
+              "line": 14,
+              "side": "new",
+              "category": "THIRD_PARTY_TRANSFER",
+              "confidence": 0.95,
+              "article": "Art. 6(1)",
+              "explanation": "The new sync_customer function POSTs the customer's full name, email, and phone number (all direct identifiers) to an external CRM service (api.relatecrm.example). This transfer is wired into the post_save signal, so it now happens automatically on every customer create/update.",
+              "suggested_fix": "Document a lawful basis for the CRM disclosure and ensure a data processing agreement (Art. 28) is in place with the CRM provider; if not strictly required, send only the external_id and fetch the rest server-side, or gate the sync behind an explicit consent flag on the customer."
+            }
+          ],
+          "error": null,
+          "cost_usd": 0.0010489656,
+          "latency_s": 18.841272200003004,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1514,
+              "output_tokens": 893,
+              "cost_usd": 0.0010489656,
+              "cost_method": "reported",
+              "latency_s": 18.841272200003004,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "pos-transfer-003",
+          "findings": [
+            {
+              "file": "src/main/java/com/acme/shop/marketing/AudienceExporter.java",
+              "line": 33,
+              "side": "new",
+              "category": "THIRD_PARTY_TRANSFER",
+              "confidence": 0.9,
+              "article": "Art. 6(1)(a)",
+              "explanation": "The nightly export sends each customer's email to an external advertising service. The value is only hashed with a plain, unkeyed SHA-256, which the GDPR still treats as the email identifier itself, so personal data is being transferred to a third party (AdReach) from this change onward.",
+              "suggested_fix": "Do not export raw customer emails to the ad network; if onboarding is unavoidable, replace sha256 with a keyed HMAC (e.g. HMAC-SHA-256 with a server-side secret) so the uploaded values are no longer personal data, and document the transfer as a processor/consent-covered flow."
+            }
+          ],
+          "error": null,
+          "cost_usd": 0.0007342578,
+          "latency_s": 17.453893899997638,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 2087,
+              "output_tokens": 816,
+              "cost_usd": 0.0007342578,
+              "cost_method": "reported",
+              "latency_s": 17.453893899997638,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "trk-email-domain",
+          "findings": [],
+          "error": null,
+          "cost_usd": 0.0002485656,
+          "latency_s": 5.535310400002345,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1148,
+              "output_tokens": 156,
+              "cost_usd": 0.0002485656,
+              "cost_method": "reported",
+              "latency_s": 5.535310400002345,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "trk-encrypted-column",
+          "findings": [],
+          "error": null,
+          "cost_usd": 0.0003947256,
+          "latency_s": 2.6939652000000933,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1594,
+              "output_tokens": 101,
+              "cost_usd": 0.0003947256,
+              "cost_method": "reported",
+              "latency_s": 2.6939652000000933,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "trk-ip-access-log",
+          "findings": [],
+          "error": null,
+          "cost_usd": 0.000161208,
+          "latency_s": 2.868333700000221,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1400,
+              "output_tokens": 120,
+              "cost_usd": 0.000161208,
+              "cost_method": "reported",
+              "latency_s": 2.868333700000221,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "trk-keyed-hash",
+          "findings": [],
+          "error": null,
+          "cost_usd": 0.0005191356,
+          "latency_s": 4.377999400003318,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1826,
+              "output_tokens": 128,
+              "cost_usd": 0.0005191356,
+              "cost_method": "reported",
+              "latency_s": 4.377999400003318,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "trk-moved-deletion",
+          "findings": [],
+          "error": null,
+          "cost_usd": 0.0002764314,
+          "latency_s": 2.5373823000008997,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1543,
+              "output_tokens": 54,
+              "cost_usd": 0.0002764314,
+              "cost_method": "reported",
+              "latency_s": 2.5373823000008997,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "trk-sms-refactor",
+          "findings": [],
+          "error": null,
+          "cost_usd": 0.0005121756,
+          "latency_s": 5.649550099999033,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1678,
+              "output_tokens": 194,
+              "cost_usd": 0.0005121756,
+              "cost_method": "reported",
+              "latency_s": 5.649550099999033,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "trk-user-id-log",
+          "findings": [],
+          "error": null,
+          "cost_usd": 0.0000946272,
+          "latency_s": 2.752561199999036,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1224,
+              "output_tokens": 68,
+              "cost_usd": 0.0000946272,
+              "cost_method": "reported",
+              "latency_s": 2.752561199999036,
+              "error": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "results": [
+        {
+          "case_id": "neg-004",
+          "findings": [],
+          "error": null,
+          "cost_usd": 0.000038538,
+          "latency_s": 1.512352199999441,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1310,
+              "output_tokens": 24,
+              "cost_usd": 0.000038538,
+              "cost_method": "reported",
+              "latency_s": 1.512352199999441,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "neg-005",
+          "findings": [],
+          "error": null,
+          "cost_usd": 0.000042888,
+          "latency_s": 1.1339598999984446,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1314,
+              "output_tokens": 27,
+              "cost_usd": 0.000042888,
+              "cost_method": "reported",
+              "latency_s": 1.1339598999984446,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "neg-006",
+          "findings": [],
+          "error": null,
+          "cost_usd": 0.000097698,
+          "latency_s": 2.8052840000018477,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1324,
+              "output_tokens": 85,
+              "cost_usd": 0.000097698,
+              "cost_method": "reported",
+              "latency_s": 2.8052840000018477,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "neg-008",
+          "findings": [],
+          "error": null,
+          "cost_usd": 0.0000432972,
+          "latency_s": 2.7999473999989277,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1172,
+              "output_tokens": 35,
+              "cost_usd": 0.0000432972,
+              "cost_method": "reported",
+              "latency_s": 2.7999473999989277,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "neg-009",
+          "findings": [],
+          "error": null,
+          "cost_usd": 0.000032448,
+          "latency_s": 1.8783760000005714,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1298,
+              "output_tokens": 23,
+              "cost_usd": 0.000032448,
+              "cost_method": "reported",
+              "latency_s": 1.8783760000005714,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "neg-010",
+          "findings": [],
+          "error": null,
+          "cost_usd": 0.0000494388,
+          "latency_s": 2.055866099999548,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1442,
+              "output_tokens": 34,
+              "cost_usd": 0.0000494388,
+              "cost_method": "reported",
+              "latency_s": 2.055866099999548,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "neg-011",
+          "findings": [],
+          "error": null,
+          "cost_usd": 0.000050412,
+          "latency_s": 1.7723077999980887,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1962,
+              "output_tokens": 29,
+              "cost_usd": 0.000050412,
+              "cost_method": "reported",
+              "latency_s": 1.7723077999980887,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "pos-erasure-001",
+          "findings": [
+            {
+              "file": "accounts/services.py",
+              "line": 10,
+              "side": "old",
+              "category": "ERASURE_REGRESSION",
+              "confidence": 0.92,
+              "article": "Art. 17",
+              "explanation": "The `anonymise_orders(user)` call (and its import) is removed from `delete_account`, so on account deletion the user's order records are no longer anonymised and their personal data (e.g. items, delivery/contact details tied to the order) is kept even though the user and customer rows are deleted.",
+              "suggested_fix": "Restore the `anonymise_orders(user)` call inside the transaction (or route the deletion through an equivalent order-anonymisation step) so orders are stripped of personal data when the account is erased."
+            }
+          ],
+          "error": null,
+          "cost_usd": 0.000423078,
+          "latency_s": 9.71567629999845,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1324,
+              "output_tokens": 459,
+              "cost_usd": 0.000423078,
+              "cost_method": "reported",
+              "latency_s": 9.71567629999845,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "pos-erasure-003",
+          "findings": [
+            {
+              "file": "src/main/java/com/acme/shop/account/UserAccountService.java",
+              "line": 19,
+              "side": "new",
+              "category": "ERASURE_REGRESSION",
+              "confidence": 0.9,
+              "article": "Art. 17",
+              "explanation": "The hard delete of a user account is replaced by a soft delete (setDeleted(true) + deletedAt) that keeps the account record and all its personal fields in the database indefinitely. This removes the erasure mechanism for the personal data held in UserAccount.",
+              "suggested_fix": "Keep the soft-delete flag for business logic but add a scheduled purge/anonymisation job that hard-deletes or anonymises soft-deleted accounts after a defined retention period (or call delete on the account here in addition to the flag)."
+            }
+          ],
+          "error": null,
+          "cost_usd": 0.000297798,
+          "latency_s": 6.3822024000000965,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1384,
+              "output_tokens": 285,
+              "cost_usd": 0.000297798,
+              "cost_method": "reported",
+              "latency_s": 6.3822024000000965,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "pos-logging-001",
+          "findings": [
+            {
+              "file": "accounts/views.py",
+              "line": 17,
+              "side": "new",
+              "category": "PII_LOGGING",
+              "confidence": 0.95,
+              "article": "Art. 5(1)(c)",
+              "explanation": "The new log statement writes the user's email address (a direct identifier) to the application log on every signup. Logs are typically retained long-term and widely accessible, so this is excessive processing of personal data.",
+              "suggested_fix": "Log a non-identifying value instead, e.g. an internal user id (`user.id`) or a pseudonymised identifier, and avoid logging `user.email`."
+            }
+          ],
+          "error": null,
+          "cost_usd": 0.0001916838,
+          "latency_s": 3.582057999999961,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1477,
+              "output_tokens": 180,
+              "cost_usd": 0.0001916838,
+              "cost_method": "reported",
+              "latency_s": 3.582057999999961,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "pos-logging-002",
+          "findings": [
+            {
+              "file": "src/checkout/checkout.controller.ts",
+              "line": 12,
+              "side": "new",
+              "category": "PII_LOGGING",
+              "confidence": 0.88,
+              "article": "Art. 5(1)(c)",
+              "explanation": "The new error log writes the entire checkout request body to the application logs, which will contain customer personal data such as name, email and postal address. Logging the full payload exposes these direct identifiers in log storage with no minimisation or retention control.",
+              "suggested_fix": "Log only non-personal context (e.g. order id or a masked/allow-listed subset of fields) instead of the raw req.body."
+            }
+          ],
+          "error": null,
+          "cost_usd": 0.0002638422,
+          "latency_s": 8.690015300002415,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1271,
+              "output_tokens": 239,
+              "cost_usd": 0.0002638422,
+              "cost_method": "reported",
+              "latency_s": 8.690015300002415,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "pos-logging-004",
+          "findings": [
+            {
+              "file": "billing/views.py",
+              "line": 15,
+              "side": "new",
+              "category": "PII_LOGGING",
+              "confidence": 0.92,
+              "article": "Art. 5(1)(c)",
+              "explanation": "The refund log statement now includes `describe_customer(...)`, which formats the customer's full name and contact (email/phone) into the application log — two direct identifiers that were not logged before.",
+              "suggested_fix": "Log only the refund reference, e.g. `logger.info(\"refund %s issued\", pending.pk)`, and keep the customer out of the log line (or log a pseudonymous reference instead)."
+            }
+          ],
+          "error": null,
+          "cost_usd": 0.000459183,
+          "latency_s": 4.696482200000901,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1393,
+              "output_tokens": 466,
+              "cost_usd": 0.000459183,
+              "cost_method": "reported",
+              "latency_s": 4.696482200000901,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "pos-logging-005",
+          "findings": [
+            {
+              "file": "src/middleware/auth.ts",
+              "line": 11,
+              "side": "new",
+              "category": "PII_LOGGING",
+              "confidence": 0.9,
+              "article": "Art. 5(1)(c)",
+              "explanation": "Sentry.setUser attaches the user's email and username (direct identifiers) to every event sent to the Sentry error tracker, exposing personal data to an external service. The internal user id alone would have sufficed to correlate errors.",
+              "suggested_fix": "Send only the non-personal identifier, e.g. `Sentry.setUser({ id: user.id })`, and scrub email/username via Sentry's beforeSend/scrubbing configuration if they are ever needed."
+            }
+          ],
+          "error": null,
+          "cost_usd": 0.0008402172,
+          "latency_s": 8.965550000000803,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1204,
+              "output_tokens": 935,
+              "cost_usd": 0.0008402172,
+              "cost_method": "reported",
+              "latency_s": 8.965550000000803,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "pos-storage-001",
+          "findings": [
+            {
+              "file": "customers/models.py",
+              "line": 7,
+              "side": "new",
+              "category": "PII_STORAGE",
+              "confidence": 0.95,
+              "article": "Art. 5(1)(c)",
+              "explanation": "Two direct identifiers — phone_number (phone) and date_of_birth (DOB) — are added to the Customer model as plaintext fields with no encryption at rest and no retention rule.",
+              "suggested_fix": "Encrypt phone_number and date_of_birth at rest (e.g. django-encrypted-model-fields) and add a documented retention/purge policy covering these fields."
+            }
+          ],
+          "error": null,
+          "cost_usd": 0.0002160696,
+          "latency_s": 5.759714399999211,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1546,
+              "output_tokens": 237,
+              "cost_usd": 0.0002160696,
+              "cost_method": "reported",
+              "latency_s": 5.759714399999211,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "pos-storage-003",
+          "findings": [
+            {
+              "file": "src/main/java/com/acme/clinic/patient/Patient.java",
+              "line": 21,
+              "side": "new",
+              "category": "PII_STORAGE",
+              "confidence": 0.9,
+              "article": "Art. 9(1)",
+              "explanation": "A new `diagnosis` field on the Patient entity stores health data (a special category of personal data) as plain text, with no encryption at rest and no retention or purge rule defined anywhere in the change.",
+              "suggested_fix": "Encrypt the diagnosis column at rest (e.g. an attribute converter or column-level encryption) and add a documented retention rule that purges or anonymises diagnosis data after the required period."
+            }
+          ],
+          "error": null,
+          "cost_usd": 0.0002169138,
+          "latency_s": 5.097931000000244,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1455,
+              "output_tokens": 220,
+              "cost_usd": 0.0002169138,
+              "cost_method": "reported",
+              "latency_s": 5.097931000000244,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "pos-transfer-001",
+          "findings": [
+            {
+              "file": "integrations/crm.py",
+              "line": 8,
+              "side": "new",
+              "category": "THIRD_PARTY_TRANSFER",
+              "confidence": 0.95,
+              "article": "Art. 6(1)",
+              "explanation": "The payload sends direct identifiers — full name (customer.display_name), email address, and phone number — to an external CRM service (api.relatecrm.example) via a newly introduced integration. This is a transfer of personal data to a third party on every customer save.",
+              "suggested_fix": "Only send fields the CRM strictly needs (or a non-identifying key such as external_id), and document a lawful basis and a data processing agreement (Art. 28) with the CRM before transferring identifiers."
+            }
+          ],
+          "error": null,
+          "cost_usd": 0.0005366388,
+          "latency_s": 11.900424999999814,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1514,
+              "output_tokens": 558,
+              "cost_usd": 0.0005366388,
+              "cost_method": "reported",
+              "latency_s": 11.900424999999814,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "pos-transfer-003",
+          "findings": [
+            {
+              "file": "src/main/java/com/acme/shop/marketing/AudienceExporter.java",
+              "line": 33,
+              "side": "new",
+              "category": "THIRD_PARTY_TRANSFER",
+              "confidence": 0.95,
+              "article": "Art. 4(1), Art. 6(1)",
+              "explanation": "Customer email addresses, hashed only with an unkeyed SHA-256, are posted to the external advertising service adreach.example as 'hashed_emails'. A plain unkeyed hash of an identifier still constitutes personal data under the GDPR, and this change newly introduces sending it to a third party.",
+              "suggested_fix": "Use a keyed HMAC with a secret kept server-side and ensure a lawful basis and appropriate data-processing agreement with the ad platform; otherwise upload the audience via a partner integration that does not expose raw or unkeyed-hashed identifiers, or drop the email-based export entirely."
+            }
+          ],
+          "error": null,
+          "cost_usd": 0.0003392778,
+          "latency_s": 7.67720829999962,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 2087,
+              "output_tokens": 362,
+              "cost_usd": 0.0003392778,
+              "cost_method": "reported",
+              "latency_s": 7.67720829999962,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "trk-email-domain",
+          "findings": [],
+          "error": null,
+          "cost_usd": 0.0002250756,
+          "latency_s": 3.248909999998432,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1148,
+              "output_tokens": 129,
+              "cost_usd": 0.0002250756,
+              "cost_method": "reported",
+              "latency_s": 3.248909999998432,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "trk-encrypted-column",
+          "findings": [],
+          "error": null,
+          "cost_usd": 0.0000951396,
+          "latency_s": 2.5538757000031183,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1594,
+              "output_tokens": 74,
+              "cost_usd": 0.0000951396,
+              "cost_method": "reported",
+              "latency_s": 2.5538757000031183,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "trk-ip-access-log",
+          "findings": [],
+          "error": null,
+          "cost_usd": 0.000118578,
+          "latency_s": 2.306869899999583,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1400,
+              "output_tokens": 71,
+              "cost_usd": 0.000118578,
+              "cost_method": "reported",
+              "latency_s": 2.306869899999583,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "trk-keyed-hash",
+          "findings": [],
+          "error": null,
+          "cost_usd": 0.0001143312,
+          "latency_s": 4.4168075999987195,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1826,
+              "output_tokens": 107,
+              "cost_usd": 0.0001143312,
+              "cost_method": "reported",
+              "latency_s": 4.4168075999987195,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "trk-moved-deletion",
+          "findings": [],
+          "error": null,
+          "cost_usd": 0.0000599046,
+          "latency_s": 2.1297656999995525,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1543,
+              "output_tokens": 59,
+              "cost_usd": 0.0000599046,
+              "cost_method": "reported",
+              "latency_s": 2.1297656999995525,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "trk-sms-refactor",
+          "findings": [],
+          "error": null,
+          "cost_usd": 0.0002661204,
+          "latency_s": 8.11858790000042,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1678,
+              "output_tokens": 292,
+              "cost_usd": 0.0002661204,
+              "cost_method": "reported",
+              "latency_s": 8.11858790000042,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "trk-user-id-log",
+          "findings": [],
+          "error": null,
+          "cost_usd": 0.0000676572,
+          "latency_s": 1.7221449999997276,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1224,
+              "output_tokens": 37,
+              "cost_usd": 0.0000676572,
+              "cost_method": "reported",
+              "latency_s": 1.7221449999997276,
+              "error": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "results": [
+        {
+          "case_id": "neg-004",
+          "findings": [],
+          "error": null,
+          "cost_usd": 0.000039408,
+          "latency_s": 3.8923039000001154,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1310,
+              "output_tokens": 25,
+              "cost_usd": 0.000039408,
+              "cost_method": "reported",
+              "latency_s": 3.8923039000001154,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "neg-005",
+          "findings": [],
+          "error": null,
+          "cost_usd": 0.000041148,
+          "latency_s": 3.792048600000271,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1314,
+              "output_tokens": 25,
+              "cost_usd": 0.000041148,
+              "cost_method": "reported",
+              "latency_s": 3.792048600000271,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "neg-006",
+          "findings": [],
+          "error": null,
+          "cost_usd": 0.000066378,
+          "latency_s": 4.697810899997421,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1324,
+              "output_tokens": 49,
+              "cost_usd": 0.000066378,
+              "cost_method": "reported",
+              "latency_s": 4.697810899997421,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "neg-008",
+          "findings": [],
+          "error": null,
+          "cost_usd": 0.0000450372,
+          "latency_s": 4.153079399999115,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1172,
+              "output_tokens": 37,
+              "cost_usd": 0.0000450372,
+              "cost_method": "reported",
+              "latency_s": 4.153079399999115,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "neg-009",
+          "findings": [],
+          "error": null,
+          "cost_usd": 0.000035058,
+          "latency_s": 2.093533999999636,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1298,
+              "output_tokens": 26,
+              "cost_usd": 0.000035058,
+              "cost_method": "reported",
+              "latency_s": 2.093533999999636,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "neg-010",
+          "findings": [],
+          "error": null,
+          "cost_usd": 0.0000903288,
+          "latency_s": 3.2753366000033566,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1442,
+              "output_tokens": 81,
+              "cost_usd": 0.0000903288,
+              "cost_method": "reported",
+              "latency_s": 3.2753366000033566,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "neg-011",
+          "findings": [],
+          "error": null,
+          "cost_usd": 0.000076512,
+          "latency_s": 1.9409527999996499,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1962,
+              "output_tokens": 59,
+              "cost_usd": 0.000076512,
+              "cost_method": "reported",
+              "latency_s": 1.9409527999996499,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "pos-erasure-001",
+          "findings": [
+            {
+              "file": "accounts/services.py",
+              "line": 10,
+              "side": "old",
+              "category": "ERASURE_REGRESSION",
+              "confidence": 0.95,
+              "article": "Art. 17",
+              "explanation": "The anonymise_orders(user) call is removed from delete_account, so order records tied to the user (which typically contain direct identifiers such as name, address, and contact details) are no longer anonymised when the account is deleted. The user and customer rows are deleted but order history keeps its personal fields.",
+              "suggested_fix": "Keep the anonymise_orders(user) call inside the transaction before deleting the user, or move the anonymisation to another step that is still invoked during account deletion."
+            }
+          ],
+          "error": null,
+          "cost_usd": 0.000295188,
+          "latency_s": 6.422935499998857,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1324,
+              "output_tokens": 312,
+              "cost_usd": 0.000295188,
+              "cost_method": "reported",
+              "latency_s": 6.422935499998857,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "pos-erasure-003",
+          "findings": [
+            {
+              "file": "src/main/java/com/acme/shop/account/UserAccountService.java",
+              "line": 19,
+              "side": "new",
+              "category": "ERASURE_REGRESSION",
+              "confidence": 0.85,
+              "article": "Art. 17",
+              "explanation": "deleteAccount previously performed a hard delete of the UserAccount record; it now sets deleted/deletedAt flags and saves, so the account's personal data (e.g. name, email) remains stored after the user's deletion request. No anonymisation or purge of the personal fields is shown anywhere in the change.",
+              "suggested_fix": "Either restore a hard delete, or when setting deleted=true also null out/anonymise the personal fields on the entity (or schedule a purge job that permanently removes the record after a defined retention period)."
+            }
+          ],
+          "error": null,
+          "cost_usd": 0.000378708,
+          "latency_s": 8.327875999999378,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1384,
+              "output_tokens": 378,
+              "cost_usd": 0.000378708,
+              "cost_method": "reported",
+              "latency_s": 8.327875999999378,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "pos-logging-001",
+          "findings": [
+            {
+              "file": "accounts/views.py",
+              "line": 17,
+              "side": "new",
+              "category": "PII_LOGGING",
+              "confidence": 0.95,
+              "article": "Art. 5(1)(c)",
+              "explanation": "The new log statement writes the user's email address (a direct identifier) to application logs on every signup, with no masking or redaction.",
+              "suggested_fix": "Log a non-personal value instead, e.g. the internal user id (or a masked email such as \"n***@example.com\"), and avoid including the raw email in the log line."
+            }
+          ],
+          "error": null,
+          "cost_usd": 0.0001873338,
+          "latency_s": 4.453886100000091,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1477,
+              "output_tokens": 175,
+              "cost_usd": 0.0001873338,
+              "cost_method": "reported",
+              "latency_s": 4.453886100000091,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "pos-logging-002",
+          "findings": [
+            {
+              "file": "src/checkout/checkout.controller.ts",
+              "line": 10,
+              "side": "new",
+              "category": "PII_LOGGING",
+              "confidence": 0.92,
+              "article": "Art. 5(1)(c)",
+              "explanation": "The new error handler logs the entire checkout request body (`payload: req.body`), which for a checkout flow typically contains direct identifiers such as the customer's email, full name and postal address (and possibly payment details). All of that personal data is now written to the application logs with no masking or redaction.",
+              "suggested_fix": "Log only the error message plus non-personal context (e.g. orderId and a request correlation id), or pass req.body through a redaction filter that strips name, email, address and payment fields before logging."
+            }
+          ],
+          "error": null,
+          "cost_usd": 0.0004726422,
+          "latency_s": 12.24616210000022,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1271,
+              "output_tokens": 479,
+              "cost_usd": 0.0004726422,
+              "cost_method": "reported",
+              "latency_s": 12.24616210000022,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "pos-logging-004",
+          "findings": [
+            {
+              "file": "billing/views.py",
+              "line": 15,
+              "side": "new",
+              "category": "PII_LOGGING",
+              "confidence": 0.92,
+              "article": "Art. 5(1)(c)",
+              "explanation": "The new logger.info call writes the customer's full name and contact (email/phone — direct identifiers) into application logs via describe_customer, expanding what was previously only the internal refund ID.",
+              "suggested_fix": "Log only non-personal fields (e.g. pending.pk and amount) or reference the customer by internal ID; if names are needed for support, log a masked form and restrict access to the log store."
+            }
+          ],
+          "error": null,
+          "cost_usd": 0.000748023,
+          "latency_s": 6.331380499999796,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1393,
+              "output_tokens": 798,
+              "cost_usd": 0.000748023,
+              "cost_method": "reported",
+              "latency_s": 6.331380499999796,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "pos-logging-005",
+          "findings": [
+            {
+              "file": "src/middleware/auth.ts",
+              "line": 11,
+              "side": "new",
+              "category": "PII_LOGGING",
+              "confidence": 0.92,
+              "article": "Art. 5(1)(c)",
+              "explanation": "The new Sentry.setUser call attaches the user's email address (a direct identifier) and username as context to every error event sent to the Sentry error tracker, exposing personal data outside the application's own logging. The same call also constitutes a third-party transfer of that data to Sentry's servers, but it is one risk.",
+              "suggested_fix": "Send only the internal user id to Sentry (e.g. Sentry.setUser({ id: user.id })), or configure Sentry's beforeSend/scrubbing to drop email and username before events leave the process."
+            }
+          ],
+          "error": null,
+          "cost_usd": 0.0005383272,
+          "latency_s": 5.844504699998652,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1204,
+              "output_tokens": 588,
+              "cost_usd": 0.0005383272,
+              "cost_method": "reported",
+              "latency_s": 5.844504699998652,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "pos-storage-001",
+          "findings": [
+            {
+              "file": "customers/models.py",
+              "line": 7,
+              "side": "new",
+              "category": "PII_STORAGE",
+              "confidence": 0.85,
+              "article": "Art. 5(1)(c)",
+              "explanation": "The Customer model gains phone_number and date_of_birth, both direct identifiers under GDPR, stored in plaintext with no encryption at rest and no retention rule covering them.",
+              "suggested_fix": "Add explicit encryption at rest for these fields (e.g. a Fernet/AES-encrypted field type) and a documented retention policy with a purge or anonymisation job for customer contact and birth data."
+            }
+          ],
+          "error": null,
+          "cost_usd": 0.0001986696,
+          "latency_s": 4.569808700001886,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1546,
+              "output_tokens": 217,
+              "cost_usd": 0.0001986696,
+              "cost_method": "reported",
+              "latency_s": 4.569808700001886,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "pos-storage-003",
+          "findings": [
+            {
+              "file": "src/main/java/com/acme/clinic/patient/Patient.java",
+              "line": 21,
+              "side": "new",
+              "category": "PII_STORAGE",
+              "confidence": 0.92,
+              "article": "Art. 9(1)",
+              "explanation": "A new `diagnosis` field stores health data (a special category of personal data) on the Patient entity with no encryption at rest and no retention rule shown anywhere in the change.",
+              "suggested_fix": "Encrypt the diagnosis column at rest (e.g. JPA attribute converter with AES-GCM) and add a documented retention/purge rule for patient diagnosis records."
+            }
+          ],
+          "error": null,
+          "cost_usd": 0.0002273538,
+          "latency_s": 4.779485099999874,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1455,
+              "output_tokens": 232,
+              "cost_usd": 0.0002273538,
+              "cost_method": "reported",
+              "latency_s": 4.779485099999874,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "pos-transfer-001",
+          "findings": [
+            {
+              "file": "integrations/crm.py",
+              "line": 14,
+              "side": "new",
+              "category": "THIRD_PARTY_TRANSFER",
+              "confidence": 0.9,
+              "article": "Art. 6(1)",
+              "explanation": "This change introduces sending direct identifiers — the customer's full name, email address and phone number — in the JSON payload to the external CRM service at api.relatecrm.example. The transfer is triggered on every customer save via the new signal hook in customers/signals.py.",
+              "suggested_fix": "Send only the non-personal external_id to the CRM, or gate the sync behind a documented Art. 28 processing agreement with the CRM provider and a lawful basis for transmitting name, email and phone."
+            }
+          ],
+          "error": null,
+          "cost_usd": 0.0008272188,
+          "latency_s": 18.28166969999802,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1514,
+              "output_tokens": 892,
+              "cost_usd": 0.0008272188,
+              "cost_method": "reported",
+              "latency_s": 18.28166969999802,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "pos-transfer-003",
+          "findings": [
+            {
+              "file": "src/main/java/com/acme/shop/marketing/AudienceExporter.java",
+              "line": 33,
+              "side": "new",
+              "category": "THIRD_PARTY_TRANSFER",
+              "confidence": 0.92,
+              "article": "Art. 6(1)",
+              "explanation": "Customer email addresses are hashed with a plain, unkeyed SHA-256 (line 29/41) and the resulting values are sent as `hashed_emails` to the external advertising service adreach.example. An unkeyed hash of a direct identifier still counts as that identifier, so this is a transfer of personal data (customer emails) to a third party, introduced by this change.",
+              "suggested_fix": "Either drop the export to the ad network, or use a keyed hash (HMAC with a secret) as a minimum and document a lawful basis / processor agreement for the transfer; ideally only send audience data that has been reviewed for GDPR compliance with the ad platform."
+            }
+          ],
+          "error": null,
+          "cost_usd": 0.0004445478,
+          "latency_s": 11.169569500001671,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 2087,
+              "output_tokens": 483,
+              "cost_usd": 0.0004445478,
+              "cost_method": "reported",
+              "latency_s": 11.169569500001671,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "trk-email-domain",
+          "findings": [],
+          "error": null,
+          "cost_usd": 0.0002977464,
+          "latency_s": 7.742001700000401,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1148,
+              "output_tokens": 276,
+              "cost_usd": 0.0002977464,
+              "cost_method": "reported",
+              "latency_s": 7.742001700000401,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "trk-encrypted-column",
+          "findings": [],
+          "error": null,
+          "cost_usd": 0.0001168896,
+          "latency_s": 3.866238599999633,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1594,
+              "output_tokens": 99,
+              "cost_usd": 0.0001168896,
+              "cost_method": "reported",
+              "latency_s": 3.866238599999633,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "trk-ip-access-log",
+          "findings": [],
+          "error": null,
+          "cost_usd": 0.000126408,
+          "latency_s": 2.456050500000856,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1400,
+              "output_tokens": 80,
+              "cost_usd": 0.000126408,
+              "cost_method": "reported",
+              "latency_s": 2.456050500000856,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "trk-keyed-hash",
+          "findings": [],
+          "error": null,
+          "cost_usd": 0.0001935012,
+          "latency_s": 7.952103499999794,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1826,
+              "output_tokens": 198,
+              "cost_usd": 0.0001935012,
+              "cost_method": "reported",
+              "latency_s": 7.952103499999794,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "trk-moved-deletion",
+          "findings": [],
+          "error": null,
+          "cost_usd": 0.0000468546,
+          "latency_s": 1.4954290999994555,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1543,
+              "output_tokens": 44,
+              "cost_usd": 0.0000468546,
+              "cost_method": "reported",
+              "latency_s": 1.4954290999994555,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "trk-sms-refactor",
+          "findings": [],
+          "error": null,
+          "cost_usd": 0.0003278904,
+          "latency_s": 8.472532100000535,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1678,
+              "output_tokens": 363,
+              "cost_usd": 0.0003278904,
+              "cost_method": "reported",
+              "latency_s": 8.472532100000535,
+              "error": null
+            }
+          ]
+        },
+        {
+          "case_id": "trk-user-id-log",
+          "findings": [],
+          "error": null,
+          "cost_usd": 0.0000728772,
+          "latency_s": 2.337727800000721,
+          "calls": [
+            {
+              "model": "xiaomi/mimo-v2.6-pro",
+              "provider": "Xiaomi",
+              "input_tokens": 1224,
+              "output_tokens": 43,
+              "cost_usd": 0.0000728772,
+              "cost_method": "reported",
+              "latency_s": 2.337727800000721,
+              "error": null
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
