@@ -193,3 +193,22 @@ def test_adapted_case_needs_url_and_license(tmp_path: Path) -> None:
 
     with pytest.raises(CaseError, match="url"):
         load_cases(tmp_path)
+
+
+def test_case_set_hash_ignores_order_and_review_status_but_not_content(tmp_path: Path) -> None:
+    from benchmark.cases import case_set_hash
+
+    write_case(tmp_path, "pos-a", POSITIVE_LABEL.replace("pos-logging-001", "pos-a"))
+    write_case(tmp_path, "pos-b", POSITIVE_LABEL.replace("pos-logging-001", "pos-b"))
+    cases = load_cases(tmp_path)
+    original = case_set_hash(cases)
+
+    assert case_set_hash(list(reversed(cases))) == original
+
+    label = tmp_path / "pos-a" / "label.yaml"
+    label.write_text(label.read_text() + "reviewed: true" + chr(10))
+    assert case_set_hash(load_cases(tmp_path)) == original
+
+    diff = tmp_path / "pos-a" / "pr.diff"
+    diff.write_text(diff.read_text().replace("user.email", "user.phone"))
+    assert case_set_hash(load_cases(tmp_path)) != original

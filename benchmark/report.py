@@ -10,13 +10,43 @@ import sys
 from collections.abc import Sequence
 from pathlib import Path
 
-from benchmark.cases import Case, load_cases
+from benchmark.cases import Case, case_set_hash, load_cases
 from benchmark.results import ResultsFile, load_results
 from benchmark.score import Spread, ThresholdReport, score
+from reviewer.configs import ReviewConfig, load_config
 from reviewer.schemas import Category
 
 BENCHMARK_DIR = Path(__file__).parent
 THRESHOLDS = (0.0, 0.3, 0.5, 0.7, 0.9)
+# The threshold rule: the highest threshold whose recall is within this of threshold 0.0.
+RECALL_SLACK = 0.05
+
+
+class ReportError(ValueError):
+    """The results file can't be scored the way it was asked for."""
+
+
+def pick_threshold(recall_at: dict[float, float | None]) -> float:
+    """Highest threshold whose mean recall is within RECALL_SLACK of the lowest threshold's."""
+    lowest = min(recall_at)
+    base = recall_at[lowest]
+    if base is None:
+        return lowest
+    allowed = [t for t, r in recall_at.items() if r is not None and r >= base - RECALL_SLACK]
+    return max(allowed)
+
+
+def check_same_pipeline(ran: ReviewConfig, scored_as: ReviewConfig) -> None:
+    """--as-config may only change what the report applies (name, threshold)."""
+    ignored = {"name", "threshold"}
+    a = ran.model_dump(exclude=ignored)
+    b = scored_as.model_dump(exclude=ignored)
+    different = sorted(key for key in a if a[key] != b[key])
+    if different:
+        raise ReportError(
+            f"{scored_as.name} differs from {ran.name} in {', '.join(different)}: "
+            "it needs its own run"
+        )
 
 
 def format_spread(spread: Spread, *, percent: bool) -> str:
@@ -45,13 +75,24 @@ def _seconds(spread: Spread) -> str:
     return "n/a" if spread.mean is None else f"{spread.mean:.1f}s"
 
 
-def format_report(results: ResultsFile, cases: Sequence[Case]) -> str:
-    report = score(cases, results.runs, THRESHOLDS)
+def format_report(
+    results: ResultsFile, cases: Sequence[Case], *, config: ReviewConfig | None = None
+) -> str:
+    chosen = config.threshold if config is not None else 0.0
+    thresholds = tuple(sorted({*THRESHOLDS, chosen}))
+    report = score(cases, results.runs, thresholds)
     commit = results.git_commit[:7] if results.git_commit else "no commit"
+    name = config.name if config is not None else results.config
+    scored_as = f" (scored from a {results.config} run)" if name != results.config else ""
+    current = case_set_hash(cases)
+    case_set = results.case_set or "not recorded"
+    if results.case_set is not None and results.case_set != current:
+        case_set += f" (CHANGED: the cases now hash to {current})"
+    rule = pick_threshold({t: r.recall.mean for t, r in report.thresholds.items()})
     lines = [
-        f"# {results.config} x {results.model} on {results.split}",
+        f"# {name} x {results.model} on {results.split}{scored_as}",
         "",
-        f"{len(results.runs)} runs x {len(cases)} cases; commit {commit}"
+        f"{len(results.runs)} runs x {len(cases)} cases; commit {commit}; case set {case_set}"
         + ("; DIRTY (uncommitted code, not publishable)" if results.dirty else "")
         + (f"; STOPPED EARLY: {results.stopped_early}" if results.stopped_early else ""),
         f"Pinned provider: {results.provider or 'none'}; served by: "
@@ -61,14 +102,18 @@ def format_report(results: ResultsFile, cases: Sequence[Case]) -> str:
         + f"; total ${results.total_cost():.4f}",
         "",
         "Rates are the mean over runs, with min-max when runs differ; n is the denominator.",
+        f"Config threshold: {chosen:.1f} (row marked *). The threshold rule (highest threshold "
+        f"with recall within {RECALL_SLACK * 100:.0f} points of {thresholds[0]:.1f}) picks "
+        f"{rule:.1f}.",
         "",
         "| Threshold | Recall | Precision | False alarms per clean PR | Clean PRs with a false "
         "alarm | Error rate | Location-only recall | Invalid locations |",
         "|---|---|---|---|---|---|---|---|",
     ]
     for threshold, t in report.thresholds.items():
+        mark = "*" if threshold == chosen else ""
         lines.append(
-            f"| {threshold:.1f} | {format_spread(t.recall, percent=True)} "
+            f"| {threshold:.1f}{mark} | {format_spread(t.recall, percent=True)} "
             f"| {format_spread(t.precision, percent=True)} "
             f"| {format_spread(t.false_alarms_per_clean_pr, percent=False)} "
             f"| {format_spread(t.clean_prs_with_false_alarm, percent=True)} "
@@ -128,13 +173,26 @@ def _per_case(threshold: ThresholdReport) -> list[str]:
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m benchmark.report", description=__doc__)
     parser.add_argument("results", type=Path)
+    parser.add_argument(
+        "--as-config",
+        help="score as another config that differs only in name and threshold (e.g. v1_1)",
+    )
     args = parser.parse_args(argv)
 
     results = load_results(args.results)
+    try:
+        config = load_config(results.config)
+        if args.as_config:
+            scored_as = load_config(args.as_config)
+            check_same_pipeline(config, scored_as)
+            config = scored_as
+    except ValueError as error:
+        print(f"error: {error}", file=sys.stderr)
+        return 2
     wanted = {result.case_id for run in results.runs for result in run.results}
     cases = [case for case in load_cases(BENCHMARK_DIR / "cases") if case.id in wanted]
     sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
-    print(format_report(results, cases), end="")
+    print(format_report(results, cases, config=config), end="")
     return 0
 
 

@@ -17,10 +17,10 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 
-from benchmark.cases import Case, load_cases
+from benchmark.cases import Case, case_set_hash, load_cases
 from benchmark.results import CaseResult, ResultsFile, Run, save_results
 from benchmark.splits import load_splits
-from reviewer.config import SettingsError, settings_from_environment
+from reviewer.config import ModelSettings, SettingsError, settings_from_environment
 from reviewer.configs import ReviewConfig, load_config
 from reviewer.llm import LLM, LLMError, OpenRouterLLM
 from reviewer.review import ReviewError, review
@@ -109,6 +109,20 @@ def _review_case(case: Case, config: ReviewConfig, llm: LLM) -> CaseResult:
     )
 
 
+def override_model(
+    settings: ModelSettings, model: str | None, provider: str | None
+) -> ModelSettings:
+    """--model / --provider for one run. None keeps .env; an empty provider unpins it."""
+    if model is not None and "/" not in model:
+        raise RunnerError(f"--model {model!r} is not in OpenRouter's provider/model form")
+    update: dict[str, str | None] = {}
+    if model is not None:
+        update["model"] = model
+    if provider is not None:
+        update["provider"] = provider.strip() or None
+    return settings.model_copy(update=update)
+
+
 def check_split_allowed(split: str, *, confirmed_test: bool) -> None:
     if split == "test" and not confirmed_test:
         raise RunnerError(
@@ -142,6 +156,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--workers", type=int, default=4)
     parser.add_argument("--max-cost", type=float, default=2.0, help="stop at this USD total")
     parser.add_argument("--case", action="append", help="only these case ids (smoke tests)")
+    parser.add_argument("--model", help="override GDPR_REVIEWER_MODEL for this run")
+    parser.add_argument("--provider", help="override GDPR_REVIEWER_PROVIDER ('' = unpinned)")
     parser.add_argument("--i-mean-test", action="store_true", help="confirm a test-split run")
     parser.add_argument(
         "--allow-dirty",
@@ -161,7 +177,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 "Commit first, or pass --allow-dirty for a trial run."
             )
         cases = _select_cases(args.split, args.case)
-        settings = settings_from_environment()
+        settings = override_model(settings_from_environment(), args.model, args.provider)
         llm = OpenRouterLLM(settings)
         llm.preflight()
     except (RunnerError, SettingsError, LLMError, ValueError) as error:
@@ -197,6 +213,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         provider=settings.provider,
         split=args.split if not args.case else f"{args.split}-subset",
         git_commit=commit,
+        case_set=case_set_hash(cases),
         dirty=dirty,
         started_at=started,
         finished_at=datetime.now(UTC),

@@ -67,8 +67,29 @@ def test_report_shows_identity_metrics_and_per_case_detail() -> None:
     assert "v1 x xiaomi/mimo-v2.6-pro" in text
     assert "0123456" in text
     assert "DIRTY" in text
-    assert "| 0.0 | 100% (n=1)" in text
+    assert "| 0.0* | 100% (n=1)" in text
     assert "False alarms per clean PR" in text
     assert "n/a" in text  # no clean PRs here
     assert "pos-x" in text
     json.dumps(text)  # plain text, no objects leaking into the output
+
+
+def test_threshold_rule_picks_highest_threshold_within_five_points() -> None:
+    from benchmark.report import pick_threshold
+
+    recall = {0.0: 1.0, 0.3: 1.0, 0.5: 0.97, 0.7: 0.96, 0.9: 0.83}
+    assert pick_threshold(recall) == 0.7
+    assert pick_threshold({0.0: None, 0.5: None}) == 0.0
+    assert pick_threshold({0.0: 0.5, 0.3: 0.2}) == 0.0
+
+
+def test_as_config_must_differ_only_in_name_and_threshold() -> None:
+    import pytest
+
+    from benchmark.report import ReportError, check_same_pipeline
+    from reviewer.configs import ReviewConfig
+
+    v1 = ReviewConfig(name="v1", prompt="v1")
+    check_same_pipeline(v1, ReviewConfig(name="v1_1", prompt="v1", threshold=0.7))
+    with pytest.raises(ReportError, match="prompt"):
+        check_same_pipeline(v1, ReviewConfig(name="v2", prompt="v2"))

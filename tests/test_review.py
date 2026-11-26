@@ -162,3 +162,28 @@ def test_v1_config_is_loadable_by_name() -> None:
 def test_unknown_config_name_is_a_clear_error() -> None:
     with pytest.raises(ValueError, match="no config named 'v99'"):
         load_config("v99")
+
+
+def test_v1_1_is_v1_with_a_threshold() -> None:
+    v1, v1_1 = load_config("v1"), load_config("v1_1")
+
+    assert v1_1.threshold == 0.7
+    assert v1_1.model_dump(exclude={"name", "threshold"}) == v1.model_dump(
+        exclude={"name", "threshold"}
+    )
+
+
+def test_v2_prompt_is_v1_plus_only_the_grouping_rule() -> None:
+    import difflib
+
+    from reviewer.review import PROMPTS
+
+    v1 = (PROMPTS / "v1_system.md").read_text(encoding="utf-8").splitlines()
+    v2 = (PROMPTS / "v2_system.md").read_text(encoding="utf-8").splitlines()
+    changes = [line for line in difflib.ndiff(v1, v2) if line[:2] in ("+ ", "- ")]
+    added = [line[2:] for line in changes if line.startswith("+ ")]
+
+    assert all(line.startswith("+ ") for line in changes), "v2 must not remove v1 text"
+    assert "One risk is one finding" in " ".join(added)
+    assert len([line for line in added if line.strip()]) == 4
+    assert (PROMPTS / "v1_user.md").read_text() == (PROMPTS / "v2_user.md").read_text()

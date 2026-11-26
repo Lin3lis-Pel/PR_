@@ -4,6 +4,9 @@ load_cases validates every label against its diff, so a labelling mistake fails 
 instead of quietly distorting the numbers.
 """
 
+import hashlib
+import json
+from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
@@ -144,3 +147,18 @@ def _check_issue_location(name: str, issue: Issue, diff: ParsedDiff) -> None:
             f"{name}: issue at {issue.file}:{issue.line}-{issue.last_line} ({issue.side} side)"
             " covers no changed line"
         )
+
+
+def case_set_hash(cases: Sequence[Case]) -> str:
+    """Identifies the exact cases a row was measured on: ids, labels and diffs.
+
+    Ignores order and the `reviewed` flag, so approving a batch doesn't change the hash.
+    """
+    digest = hashlib.sha256()
+    for case in sorted(cases, key=lambda c: c.id):
+        label = case.label.model_dump(mode="json", exclude={"reviewed"})
+        digest.update(json.dumps(label, sort_keys=True).encode())
+        digest.update(b"\0")
+        digest.update(case.diff_text.encode())
+        digest.update(b"\0")
+    return digest.hexdigest()[:16]

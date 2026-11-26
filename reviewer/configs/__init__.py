@@ -5,6 +5,7 @@ and every results file records which model and provider served the run.
 """
 
 import importlib
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -16,6 +17,12 @@ class ReviewConfig(BaseModel):
     prompt: str  # prompt set in reviewer/prompts/: <prompt>_system.md and <prompt>_user.md
     temperature: float = Field(default=0.0, ge=0.0)
     max_retries: int = Field(default=2, ge=0)
+    # Findings below this confidence are not shown. Applied by wrappers and by the report,
+    # never by review(): results files keep every finding.
+    threshold: float = Field(default=0.0, ge=0.0, le=1.0)
+    # single: one call. detect_verify: one detect call, then one verify call per finding.
+    pipeline: Literal["single", "detect_verify"] = "single"
+    verify_prompt: str | None = None  # prompt set for the verify step (detect_verify only)
 
 
 def load_config(name: str) -> ReviewConfig:

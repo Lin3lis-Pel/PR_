@@ -8,19 +8,22 @@ main deliverable**, and the reviewer is what it measures.
 ## Status
 
 Greenfield. Build order: 0 prior-art check → 1 skeleton → 2 benchmark format + scorer →
-3 first 30 cases → 4 v1 baseline → 5 measured improvements (v2, LangGraph, threshold, RAG,
-v3 repo context, cheap model) → 6 service + GitHub Action → 6.5 learning from PRs →
+3 first 30 cases → 4 v1 baseline → 5 measured improvements (5b: threshold, cheap model, v2,
+LangGraph; then 5a: 50 harder cases; then v3 repo context; RAG dropped, see
+`.scratch/step-5/spec.md`) → 6 service + GitHub Action → 6.5 learning from PRs →
 7 MCP server → 8 Cloud Run → 9 README + dashboard.
 
-**Current step: 5 (measured improvements), not started; begin with `/grill-me`.** Steps 1–4
-are done. The v1 dev row (`v1 x xiaomi/mimo-v2.6-pro`, 3 runs, commit 6e5320b) scored
-recall 100% (n=8), precision 96%, 0 false alarms on 11 clean PRs, $0.0004 per PR: the 30
-synthetic cases are too easy to measure improvements against, so Step 5 starts with harder
-and adapted real-world cases. The 30 cases are all `reviewed: true` (12 positive,
-10 negative, 8 tricky across Django, Express + Prisma and Spring Boot), the policy is in
-`docs/personal-data-policy.md`, and `benchmark/splits.yaml` has 19 dev / 11 test. Cases are
-hand-edited in place; there is no generator in the repo. Step 0 (prior-art check) is still
-open. The test split has not been run. Update this line when a step is done.
+**Current step: 5b (improvements on the current 30 cases), in progress.** Plan and decisions:
+`.scratch/step-5/spec.md`, tickets in `.scratch/step-5/issues/`. Order: 5b (v1_1 threshold,
+v1 x mimo-v2.6-flash, v2 grouping rule, v2_1 LangGraph detect -> verify) on the current
+cases, then 5a (+50 harder cases, reviewed in 5 batches of 10), then every config re-run on
+the larger dev split for the README. Built: config thresholds, `report --as-config`,
+case-set hash in results, runner `--model/--provider`, configs v1_1, v2, v2_1. Step 0 is done
+(`docs/prior-art.md`). The v1 dev row (commit 6e5320b) scored recall 100% (n=8), precision
+96%, 0 false alarms on 11 clean PRs: the current cases are too easy, so 5b can only measure
+cost, latency, duplicates, calibration and stability. The test split has not been run.
+Cases: 30, all `reviewed: true`, 19 dev / 11 test, hand-edited in place (no generator in
+the repo). Update this line when a step is done.
 
 Domain terms are in `GLOSSARY.md`; decisions are in `docs/adr/`. Read both before changing
 `benchmark/`.
@@ -57,8 +60,8 @@ adding a category: it changes the benchmark and every published number.
 - All model calls go through **OpenRouter** (OpenAI-compatible API,
   `https://openrouter.ai/api/v1`) with the key in `OPENROUTER_API_KEY`. The OpenRouter
   adapter uses the plain `openai` SDK, which exposes OpenRouter's `provider` and `usage.cost`
-  fields. Whether LangGraph nodes (Step 5) call this seam or `langchain-openai`'s
-  `ChatOpenAI` is decided with the user at the start of Step 5.
+  fields. LangGraph defines pipelines only: its nodes call the `LLM` seam, never
+  `langchain-openai` (`docs/adr/0004`).
 - **The LLM client is a seam with two adapters:** the OpenRouter adapter and a fake/recorded
   adapter for tests. Nothing outside `reviewer/llm.py` imports an LLM SDK.
 - **The model is chosen in `.env`, never in code:** `GDPR_REVIEWER_MODEL` (OpenRouter's
@@ -185,7 +188,7 @@ GLOSSARY.md      domain terms (created when the first term is settled)
 ## Stack
 
 Python 3.12, uv, Pydantic v2, `openai` SDK (pointed at OpenRouter), python-dotenv, pytest,
-ruff. Planned: LangGraph (Step 5), FastAPI (6), FastMCP (7), Langfuse (optional, 6). Deploy: GCP Cloud Run + Secret Manager.
+ruff, LangGraph (pipelines only). Planned: FastAPI (6), FastMCP (7), Langfuse (optional, 6). Deploy: GCP Cloud Run + Secret Manager.
 
 ## Commands
 
@@ -196,9 +199,11 @@ uv run pytest -m integration             # real LLM calls through OpenRouter: co
 uv run ruff check . ; uv run ruff format .
 uv run python -m benchmark.runner --config v1 --split dev --runs 3   # paid: model from .env
 uv run python -m benchmark.report benchmark/results/<file>.json     # score, all thresholds
+uv run python -m benchmark.report <file> --as-config v1_1  # score as a threshold-only variant
 ```
 
-Runner flags: `--max-cost 2.0` (stop at this USD total), `--workers 4`, `--case <id>`
+Runner flags: `--model` / `--provider` (override `.env` for one run), `--max-cost 2.0` (stop
+at this USD total), `--workers 4`, `--case <id>`
 (smoke-test a few cases; saved as split `dev-subset`), `--allow-dirty`, and `--i-mean-test`
 (required for `--split test`, which runs only when the user asks).
 

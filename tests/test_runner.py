@@ -209,3 +209,24 @@ def test_new_results_files_do_not_make_the_tree_dirty(repo: Path) -> None:
     (repo / "notes.txt").write_text("unrelated")
 
     assert not git_state(repo)[1]
+
+
+def test_model_and_provider_can_be_overridden_for_one_run() -> None:
+    from benchmark.runner import override_model
+    from reviewer.config import load_settings
+
+    settings = load_settings(
+        {
+            "OPENROUTER_API_KEY": "sk-or-test",
+            "GDPR_REVIEWER_MODEL": "xiaomi/mimo-v2.6-pro",
+            "GDPR_REVIEWER_PROVIDER": "xiaomi",
+        }
+    )
+
+    assert override_model(settings, None, None) == settings
+    flash = override_model(settings, "xiaomi/mimo-v2.6-flash", None)
+    assert (flash.model, flash.provider) == ("xiaomi/mimo-v2.6-flash", "xiaomi")
+    other = override_model(settings, "openai/gpt-x", "")
+    assert (other.model, other.provider) == ("openai/gpt-x", None)
+    with pytest.raises(RunnerError, match="provider/model"):
+        override_model(settings, "bad", None)

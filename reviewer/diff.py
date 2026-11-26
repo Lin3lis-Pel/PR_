@@ -110,6 +110,14 @@ def number_diff(text: str) -> str:
     return "\n\n".join(blocks) + "\n"
 
 
+def numbered_file(text: str, path: str) -> str | None:
+    """number_diff's block for one file, or None if the diff doesn't touch that path."""
+    for block in number_diff(text).split("\n\n"):
+        if block.startswith(f"=== {path} ("):
+            return block.rstrip("\n") + "\n"
+    return None
+
+
 def _status(patched_file) -> str:
     if patched_file.is_added_file:
         return "new file"

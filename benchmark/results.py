@@ -45,6 +45,7 @@ class ResultsFile(BaseModel):
     provider: str | None  # provider that was pinned; None = OpenRouter chose
     split: str
     git_commit: str | None
+    case_set: str | None = None  # benchmark.cases.case_set_hash of the cases run
     dirty: bool  # True: code had uncommitted changes, so the row is not publishable
     started_at: datetime
     finished_at: datetime
