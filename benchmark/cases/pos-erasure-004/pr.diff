@@ -1,0 +1,10 @@
+diff --git a/src/config/retention.ts b/src/config/retention.ts
+--- a/src/config/retention.ts
++++ b/src/config/retention.ts
+@@ -1,5 +1,5 @@
+ export const retention = {
+-  inactiveAccountDays: 30,
++  inactiveAccountDays: 3650,
+   sessionLogDays: 14,
+   invoiceYears: 10,
+ };

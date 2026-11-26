@@ -1,0 +1,19 @@
+id: pos-storage-004
+kind: positive
+stack: spring-boot
+source: synthetic
+reviewed: true
+difficulty: hard
+patterns:
+- indirect_name
+- large_pr
+issues:
+- category: PII_STORAGE
+  file: src/main/java/com/acme/shop/customer/Customer.java
+  line: 18
+  end_line: 20
+- category: PII_STORAGE
+  file: src/main/resources/db/migration/V31__customer_invoicing.sql
+  line: 1
+  end_line: 2
+  required: false

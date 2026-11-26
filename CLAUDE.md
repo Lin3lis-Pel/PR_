@@ -13,15 +13,16 @@ LangGraph; then 5a: 50 harder cases; then v3 repo context; RAG dropped, see
 `.scratch/step-5/spec.md`) → 6 service + GitHub Action → 6.5 learning from PRs →
 7 MCP server → 8 Cloud Run → 9 README + dashboard.
 
-**Current step: 5a (+50 harder cases), not started; begin with its design round** (adapted-case
-rules, test-split timing). 5b is done on the current 30 cases (dev, 3 runs each, case set
-231e5725a20e41ba except the first v1 file): v1 pro recall 100% / precision 96%; v1_1
-(threshold 0.7) identical; v1 x mimo-v2.6-flash 100% / 86%, 4x cheaper; v2 100% / 100%; v2_1
-96% / 96% with p95 latency 34.5s. No row had a false alarm on the 11 clean PRs, so threshold
-and verify can't show value until 5a. After 5a, every config is re-run on the larger dev
-split for the README. Plan: `.scratch/step-5/spec.md`. Step 0 is done (`docs/prior-art.md`).
-The test split has not been run. Cases: 30, all `reviewed: true`, 19 dev / 11 test,
-hand-edited in place (no generator in the repo). Update this line when a step is done.
+**Current step: 5, wrap-up: re-run configs on the final case set, then Step 6.** The benchmark
+is final at 40 reviewed cases (30 easy + 10 hard synthetic, labelled with `difficulty`;
+24 dev / 16 test). The user stopped 5a after one batch ("too many cases"): no more cases and
+no adapted real-world cases for now. 5b results on the old 30-case set: v1 x pro recall 100%
+/ precision 96%; v1_1 identical; v1 x flash 100% / 86%, 4x cheaper; v2 100% / 100%; v2_1
+96% / 96%, p95 34.5s. Next: re-run v1, v2, v2_1 (v1_1 scored from v1) on the 24-case dev
+split, then the test split once for v1 x pro, best x pro and best x flash (ask first), then
+Step 6. Plan: `.scratch/step-5/spec.md`. Step 0 is done (`docs/prior-art.md`). The repo is
+MIT-licensed. Cases are hand-edited in place (no generator in the repo). Patterns for the 30
+easy cases are proposed but not yet approved. Update this line when a step is done.
 
 Domain terms are in `GLOSSARY.md`; decisions are in `docs/adr/`. Read both before changing
 `benchmark/`.

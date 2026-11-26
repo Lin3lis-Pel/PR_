@@ -1,0 +1,10 @@
+diff --git a/accounts/signals.py b/accounts/signals.py
+--- a/accounts/signals.py
++++ b/accounts/signals.py
+@@ -9,4 +9,5 @@
+ @receiver(post_save, sender=User)
+ def track_signup(sender, instance, created, **kwargs):
+     if created:
+-        track("signup", {"plan": instance.plan})
++        email = instance.email
++        track("signup", {"plan": instance.plan, "email_domain": email.rsplit("@", 1)[-1]})

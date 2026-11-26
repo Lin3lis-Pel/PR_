@@ -34,6 +34,39 @@ class Source(StrEnum):
     ADAPTED = "adapted"
 
 
+class Difficulty(StrEnum):
+    EASY = "easy"
+    HARD = "hard"
+
+
+class Pattern(StrEnum):
+    """What makes a case what it is. The report shows recall per pattern."""
+
+    DIRECT_NAME = "direct_name"  # the data is named for what it is (email, phone)
+    INDIRECT_NAME = "indirect_name"  # under a non-obvious name (contact, recipient, dob)
+    VIA_HELPER = "via_helper"  # reaches the risky line through a helper, serializer or DTO
+    WHOLE_OBJECT = "whole_object"  # a whole user/customer/request object is logged or sent
+    EXCEPTION_MESSAGE = "exception_message"  # personal data in an exception or error text
+    ERROR_TRACKER = "error_tracker"  # personal data in error-tracker context (Sentry, ...)
+    SDK_CLIENT = "sdk_client"  # the third party is reached through an SDK client
+    QUIET_ERASURE = "quiet_erasure"  # erasure weakened, not removed (retention, filter, flag)
+    REMOVED_CODE = "removed_code"  # the risk is in deleted lines
+    LARGE_PR = "large_pr"  # 5+ files or 150+ changed lines
+    MULTI_FILE = "multi_file"  # the risk needs two files to see (defined here, used there)
+    SPECIAL_CATEGORY = "special_category"  # Art. 9/10 data
+    HASHED = "hashed"  # plain or keyed hash of an identifier
+    MASKED = "masked"  # the value is masked before use
+    TEST_DATA = "test_data"  # fixtures, factories, seed data
+    MOVED_CODE = "moved_code"  # code moved between files
+    ALREADY_PROTECTED = "already_protected"  # encrypted, retained or otherwise handled
+    NON_PERSONAL = "non_personal"  # looks like personal data, isn't (company data, ids)
+    EXISTING_PROCESSOR = "existing_processor"  # sent to a service that already receives it
+
+
+# Adapted cases copy code from other projects, so only permissive licenses are allowed.
+PERMISSIVE_LICENSES = frozenset({"MIT", "Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "ISC"})
+
+
 class Issue(BaseModel):
     """One labelled risk. A finding matches it within [line - tolerance, end_line + tolerance]."""
 
@@ -68,6 +101,8 @@ class Label(BaseModel):
     reviewed: bool = False
     url: str | None = None
     license: str | None = None
+    difficulty: Difficulty | None = None
+    patterns: tuple[Pattern, ...] = ()
     issues: tuple[Issue, ...] = ()
 
     @model_validator(mode="after")
@@ -83,6 +118,9 @@ class Label(BaseModel):
     def _adapted_cases_are_credited(self) -> Self:
         if self.source == Source.ADAPTED and not (self.url and self.license):
             raise ValueError("an adapted case needs url and license")
+        if self.license is not None and self.license not in PERMISSIVE_LICENSES:
+            allowed = ", ".join(sorted(PERMISSIVE_LICENSES))
+            raise ValueError(f"license {self.license} is not allowed; use one of {allowed}")
         return self
 
 

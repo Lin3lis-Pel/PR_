@@ -3,6 +3,7 @@ kind: positive
 stack: express-prisma
 source: synthetic
 reviewed: true
+difficulty: easy
 issues:
 - category: ERASURE_REGRESSION
   file: src/jobs/purgeInactiveUsers.ts

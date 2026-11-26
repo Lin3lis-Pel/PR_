@@ -1,0 +1,27 @@
+diff --git a/src/main/java/com/acme/shop/profile/ProfileUpdate.java b/src/main/java/com/acme/shop/profile/ProfileUpdate.java
+new file mode 100644
+--- /dev/null
++++ b/src/main/java/com/acme/shop/profile/ProfileUpdate.java
+@@ -0,0 +1,3 @@
++package com.acme.shop.profile;
++
++public record ProfileUpdate(String displayName, String email, String phone) {}
+diff --git a/src/main/java/com/acme/shop/profile/ProfileService.java b/src/main/java/com/acme/shop/profile/ProfileService.java
+--- a/src/main/java/com/acme/shop/profile/ProfileService.java
++++ b/src/main/java/com/acme/shop/profile/ProfileService.java
+@@ -15,10 +15,12 @@
+         this.profiles = profiles;
+     }
+ 
+-    public void rename(long userId, String displayName) {
++    public void update(long userId, ProfileUpdate update) {
+         Profile profile = profiles.findByUserId(userId).orElseThrow();
+-        profile.setDisplayName(displayName);
++        profile.setDisplayName(update.displayName());
++        profile.setEmail(update.email());
++        profile.setPhone(update.phone());
+         profiles.save(profile);
+-        log.info("Renamed profile of user {}", userId);
++        log.info("Updated profile of user {}: {}", userId, update);
+     }
+ }

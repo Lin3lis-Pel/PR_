@@ -10,9 +10,9 @@ import sys
 from collections.abc import Sequence
 from pathlib import Path
 
-from benchmark.cases import Case, case_set_hash, load_cases
+from benchmark.cases import Case, Kind, case_set_hash, load_cases
 from benchmark.results import ResultsFile, load_results
-from benchmark.score import Spread, ThresholdReport, score
+from benchmark.score import Ratio, Spread, ThresholdReport, score
 from reviewer.configs import ReviewConfig, load_config
 from reviewer.schemas import Category
 
@@ -137,8 +137,41 @@ def format_report(
         f"Optional issues: {base.optional_issues}, flagged "
         f"{format_spread(base.optional_flagged, percent=False)} per run",
     ]
+    lines += ["", *_by_group(base, cases)]
     lines += ["", *_per_case(base)]
     return "\n".join(lines) + "\n"
+
+
+def _by_group(threshold: ThresholdReport, cases: Sequence[Case]) -> list[str]:
+    """Recall (positives) and share of clean PRs with a false alarm, per difficulty and
+    pattern: where a config gets better or worse, not just whether."""
+    groups: dict[str, set[str]] = {}
+    for case in cases:
+        names = [f"difficulty: {case.label.difficulty or 'unset'}"]
+        names += [f"pattern: {pattern}" for pattern in case.label.patterns]
+        for name in names:
+            groups.setdefault(name, set()).add(case.id)
+
+    lines = [
+        "## By difficulty and pattern (threshold 0.0)",
+        "",
+        "| Group | Recall | Clean PRs with a false alarm |",
+        "|---|---|---|",
+    ]
+    for name in sorted(groups, key=lambda n: (not n.startswith("difficulty"), n)):
+        ids = groups[name]
+        recall, clean = [], []
+        for run in threshold.runs:
+            scores = [s for s in run.cases if s.case_id in ids]
+            required = sum(len(s.hits) + len(s.misses) for s in scores)
+            recall.append(Ratio(sum(len(s.hits) for s in scores), required))
+            clean_scores = [s for s in scores if s.kind != Kind.POSITIVE]
+            clean.append(Ratio(sum(1 for s in clean_scores if s.false_alarms), len(clean_scores)))
+        lines.append(
+            f"| {name} | {format_spread(Spread.of_ratios(recall), percent=True)} "
+            f"| {format_spread(Spread.of_ratios(clean), percent=True)} |"
+        )
+    return lines
 
 
 def _per_case(threshold: ThresholdReport) -> list[str]:

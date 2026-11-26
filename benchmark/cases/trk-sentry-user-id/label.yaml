@@ -1,0 +1,9 @@
+id: trk-sentry-user-id
+kind: tricky
+stack: express-prisma
+source: synthetic
+reviewed: true
+difficulty: hard
+patterns:
+- error_tracker
+- non_personal

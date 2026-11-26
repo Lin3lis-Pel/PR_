@@ -37,3 +37,31 @@ Open questions for 5a's own design round: adapted-case rules, test-split timing.
 ## Alongside: Step 0
 
 Short prior-art survey in `docs/prior-art.md`.
+
+## 5a decisions (agreed 2026-11-26)
+
+- **Adapted sources:** privacy-fix commits on public GitHub ("don't log email", "redact
+  PII", ...). The reversed fix is a positive case; the fix itself is a clean case. Search
+  with `gh` (read-only; the user signs in).
+- **Licenses:** MIT, Apache-2.0, BSD-2/3-Clause, ISC only. Notices in
+  `benchmark/cases/THIRD_PARTY_NOTICES.md`. The repo itself is MIT (`LICENSE`).
+- **Adapting:** keep structure, paths and noise; replace every real-looking value with
+  policy fakes; trim unrelated files only above 600 changed lines; every change logged in
+  the case's NOTES.md line; `stack` is the real stack.
+- **Labels:** optional `difficulty` (easy | hard) and `patterns` (fixed vocabulary in
+  `benchmark/cases.py`). All 30 existing cases are `easy`; their patterns need the user's OK.
+- **Synthetic cases:** generated in the scratchpad from before/after files, as in Step 3;
+  hand-edited only after review.
+- **Batches:** 1-3 = 30 synthetic; 4 = 5 synthetic + 5 adapted; 5 = 10 adapted. If fewer
+  than 15 adapted commits qualify, say so before batch 4 and fill with synthetic.
+- **Test split:** once, at the end of Step 5, after the dev re-runs: v1 x pro, best x pro,
+  best x flash. Ask first.
+- **pos-erasure-003:** removed hard-delete line (old 18) added as an optional issue.
+
+## 5a stopped at 40 cases (2026-11-26)
+
+The user stopped 5a after synthetic batch 1: "too many cases", focus on the tool. The
+benchmark is 40 reviewed cases (30 easy + 10 hard; 24 dev / 16 test). Unreviewed batch 2 was
+removed before commit. Adapted real-world cases are dropped for now. Remaining Step 5 work:
+re-run the configs on the 24-case dev split, then one test-split run (ask first), then
+Step 6.

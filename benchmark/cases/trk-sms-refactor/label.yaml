@@ -1,0 +1,10 @@
+id: trk-sms-refactor
+kind: tricky
+stack: spring-boot
+source: synthetic
+reviewed: true
+difficulty: hard
+patterns:
+- moved_code
+- sdk_client
+- multi_file

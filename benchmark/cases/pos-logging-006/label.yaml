@@ -1,0 +1,13 @@
+id: pos-logging-006
+kind: positive
+stack: spring-boot
+source: synthetic
+reviewed: true
+difficulty: hard
+patterns:
+- whole_object
+- multi_file
+issues:
+- category: PII_LOGGING
+  file: src/main/java/com/acme/shop/profile/ProfileService.java
+  line: 24

@@ -3,6 +3,7 @@ kind: positive
 stack: spring-boot
 source: synthetic
 reviewed: true
+difficulty: easy
 issues:
 - category: PII_STORAGE
   file: src/main/java/com/acme/clinic/patient/Patient.java

@@ -1,0 +1,105 @@
+diff --git a/src/main/java/com/acme/shop/customer/Customer.java b/src/main/java/com/acme/shop/customer/Customer.java
+--- a/src/main/java/com/acme/shop/customer/Customer.java
++++ b/src/main/java/com/acme/shop/customer/Customer.java
+@@ -4,6 +4,7 @@
+ import jakarta.persistence.GeneratedValue;
+ import jakarta.persistence.Id;
+ import java.time.Instant;
++import java.time.LocalDate;
+ 
+ @Entity
+ public class Customer {
+@@ -13,6 +14,10 @@
+     private Long id;
+ 
+     private String displayName;
++
++    private String taxRef;
++
++    private LocalDate born;
+ 
+     private Instant createdAt;
+ 
+@@ -27,4 +32,20 @@
+     public void setDisplayName(String displayName) {
+         this.displayName = displayName;
+     }
++
++    public String getTaxRef() {
++        return taxRef;
++    }
++
++    public void setTaxRef(String taxRef) {
++        this.taxRef = taxRef;
++    }
++
++    public LocalDate getBorn() {
++        return born;
++    }
++
++    public void setBorn(LocalDate born) {
++        this.born = born;
++    }
+ }
+diff --git a/src/main/resources/db/migration/V31__customer_invoicing.sql b/src/main/resources/db/migration/V31__customer_invoicing.sql
+new file mode 100644
+--- /dev/null
++++ b/src/main/resources/db/migration/V31__customer_invoicing.sql
+@@ -0,0 +1,3 @@
++ALTER TABLE customer ADD COLUMN tax_ref VARCHAR(32);
++ALTER TABLE customer ADD COLUMN born DATE;
++CREATE INDEX invoice_issued_at_idx ON invoice (issued_at);
+diff --git a/src/main/java/com/acme/shop/invoice/InvoiceNumberGenerator.java b/src/main/java/com/acme/shop/invoice/InvoiceNumberGenerator.java
+--- a/src/main/java/com/acme/shop/invoice/InvoiceNumberGenerator.java
++++ b/src/main/java/com/acme/shop/invoice/InvoiceNumberGenerator.java
+@@ -8,6 +8,6 @@
+     private final AtomicLong counter = new AtomicLong();
+ 
+     public String next() {
+-        return "INV-" + counter.incrementAndGet();
++        return String.format("INV-%d-%06d", Year.now().getValue(), counter.incrementAndGet());
+     }
+ }
+diff --git a/src/main/java/com/acme/shop/invoice/InvoiceTotals.java b/src/main/java/com/acme/shop/invoice/InvoiceTotals.java
+--- a/src/main/java/com/acme/shop/invoice/InvoiceTotals.java
++++ b/src/main/java/com/acme/shop/invoice/InvoiceTotals.java
+@@ -1,15 +1,19 @@
+ package com.acme.shop.invoice;
+ 
+ import java.math.BigDecimal;
++import java.math.RoundingMode;
+ import java.util.List;
+ 
+ public class InvoiceTotals {
+ 
+     public BigDecimal net(List<InvoiceLine> lines) {
+-        BigDecimal total = BigDecimal.ZERO;
+-        for (InvoiceLine line : lines) {
+-            total = total.add(line.price().multiply(BigDecimal.valueOf(line.quantity())));
+-        }
+-        return total;
++        return lines.stream()
++                .map(line -> line.price().multiply(BigDecimal.valueOf(line.quantity())))
++                .reduce(BigDecimal.ZERO, BigDecimal::add)
++                .setScale(2, RoundingMode.HALF_EVEN);
++    }
++
++    public BigDecimal vat(List<InvoiceLine> lines, BigDecimal rate) {
++        return net(lines).multiply(rate).setScale(2, RoundingMode.HALF_EVEN);
+     }
+ }
+diff --git a/src/test/java/com/acme/shop/invoice/InvoiceTotalsTest.java b/src/test/java/com/acme/shop/invoice/InvoiceTotalsTest.java
+--- a/src/test/java/com/acme/shop/invoice/InvoiceTotalsTest.java
++++ b/src/test/java/com/acme/shop/invoice/InvoiceTotalsTest.java
+@@ -13,4 +13,11 @@
+         var lines = List.of(new InvoiceLine(new BigDecimal("2.50"), 2));
+         assertThat(new InvoiceTotals().net(lines)).isEqualByComparingTo("5.00");
+     }
++
++    @Test
++    void computesVat() {
++        var lines = List.of(new InvoiceLine(new BigDecimal("10.00"), 1));
++        assertThat(new InvoiceTotals().vat(lines, new BigDecimal("0.21")))
++                .isEqualByComparingTo("2.10");
++    }
+ }

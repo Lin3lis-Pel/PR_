@@ -1,0 +1,15 @@
+id: pos-logging-004
+kind: positive
+stack: django
+source: synthetic
+reviewed: true
+difficulty: hard
+patterns:
+- indirect_name
+- via_helper
+- multi_file
+issues:
+- category: PII_LOGGING
+  file: billing/views.py
+  line: 15
+  end_line: 20

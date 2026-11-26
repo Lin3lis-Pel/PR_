@@ -1,0 +1,8 @@
+id: neg-011
+kind: negative
+stack: express-prisma
+source: synthetic
+reviewed: true
+difficulty: hard
+patterns:
+- large_pr

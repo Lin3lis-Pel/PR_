@@ -3,6 +3,7 @@ kind: positive
 stack: django
 source: synthetic
 reviewed: true
+difficulty: easy
 issues:
 - category: PII_LOGGING
   file: accounts/views.py

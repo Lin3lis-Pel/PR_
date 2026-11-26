@@ -1,0 +1,56 @@
+diff --git a/src/main/java/com/acme/shop/notify/SmsGateway.java b/src/main/java/com/acme/shop/notify/SmsGateway.java
+new file mode 100644
+--- /dev/null
++++ b/src/main/java/com/acme/shop/notify/SmsGateway.java
+@@ -0,0 +1,20 @@
++package com.acme.shop.notify;
++
++import com.twilio.rest.api.v2010.account.Message;
++import com.twilio.type.PhoneNumber;
++import org.springframework.beans.factory.annotation.Value;
++import org.springframework.stereotype.Component;
++
++@Component
++public class SmsGateway {
++
++    private final String sender;
++
++    public SmsGateway(@Value("${sms.sender}") String sender) {
++        this.sender = sender;
++    }
++
++    public void send(String phone, String text) {
++        Message.creator(new PhoneNumber(phone), new PhoneNumber(sender), text).create();
++    }
++}
+diff --git a/src/main/java/com/acme/shop/notify/OrderNotifier.java b/src/main/java/com/acme/shop/notify/OrderNotifier.java
+--- a/src/main/java/com/acme/shop/notify/OrderNotifier.java
++++ b/src/main/java/com/acme/shop/notify/OrderNotifier.java
+@@ -1,23 +1,19 @@
+ package com.acme.shop.notify;
+ 
+ import com.acme.shop.order.Order;
+-import com.twilio.rest.api.v2010.account.Message;
+-import com.twilio.type.PhoneNumber;
+-import org.springframework.beans.factory.annotation.Value;
+ import org.springframework.stereotype.Component;
+ 
+ @Component
+ public class OrderNotifier {
+ 
+-    private final String sender;
++    private final SmsGateway sms;
+ 
+-    public OrderNotifier(@Value("${sms.sender}") String sender) {
+-        this.sender = sender;
++    public OrderNotifier(SmsGateway sms) {
++        this.sms = sms;
+     }
+ 
+     public void shipped(Order order) {
+         String text = "Your order " + order.getNumber() + " has shipped.";
+-        Message.creator(new PhoneNumber(order.getCustomer().getPhone()), new PhoneNumber(sender), text)
+-                .create();
++        sms.send(order.getCustomer().getPhone(), text);
+     }
+ }

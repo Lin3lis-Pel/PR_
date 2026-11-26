@@ -1,0 +1,12 @@
+id: pos-erasure-004
+kind: positive
+stack: express-prisma
+source: synthetic
+reviewed: true
+difficulty: hard
+patterns:
+- quiet_erasure
+issues:
+- category: ERASURE_REGRESSION
+  file: src/config/retention.ts
+  line: 2

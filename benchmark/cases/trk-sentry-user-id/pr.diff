@@ -1,0 +1,19 @@
+diff --git a/src/middleware/errors.ts b/src/middleware/errors.ts
+--- a/src/middleware/errors.ts
++++ b/src/middleware/errors.ts
+@@ -1,7 +1,15 @@
++import * as Sentry from "@sentry/node";
+ import { NextFunction, Request, Response } from "express";
+ import { logger } from "../logger";
+ 
+ export function errorHandler(err: Error, req: Request, res: Response, _next: NextFunction) {
+   logger.error("request failed", { path: req.path, message: err.message });
++  Sentry.withScope((scope) => {
++    if (req.user) {
++      scope.setUser({ id: req.user.id });
++    }
++    scope.setTag("route", req.route?.path ?? req.path);
++    Sentry.captureException(err);
++  });
+   res.status(500).json({ error: "internal" });
+ }

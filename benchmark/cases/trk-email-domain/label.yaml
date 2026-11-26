@@ -1,0 +1,9 @@
+id: trk-email-domain
+kind: tricky
+stack: django
+source: synthetic
+reviewed: true
+difficulty: hard
+patterns:
+- masked
+- direct_name

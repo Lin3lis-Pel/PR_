@@ -3,6 +3,7 @@ kind: positive
 stack: spring-boot
 source: synthetic
 reviewed: true
+difficulty: easy
 issues:
 - category: PII_LOGGING
   file: src/main/java/com/acme/shop/order/OrderService.java

@@ -1,0 +1,38 @@
+diff --git a/newsletter/signals.py b/newsletter/signals.py
+new file mode 100644
+--- /dev/null
++++ b/newsletter/signals.py
+@@ -0,0 +1,23 @@
++import mailchimp_marketing
++from django.conf import settings
++from django.db.models.signals import post_save
++from django.dispatch import receiver
++
++from accounts.models import User
++
++client = mailchimp_marketing.Client()
++client.set_config({"api_key": settings.MAILCHIMP_KEY, "server": settings.MAILCHIMP_SERVER})
++
++
++@receiver(post_save, sender=User)
++def subscribe_new_user(sender, instance, created, **kwargs):
++    if not created:
++        return
++    client.lists.add_list_member(
++        settings.MAILCHIMP_LIST_ID,
++        {
++            "email_address": instance.email,
++            "status": "subscribed",
++            "merge_fields": {"FNAME": instance.first_name},
++        },
++    )
+diff --git a/newsletter/apps.py b/newsletter/apps.py
+--- a/newsletter/apps.py
++++ b/newsletter/apps.py
+@@ -3,3 +3,6 @@
+ 
+ class NewsletterConfig(AppConfig):
+     name = "newsletter"
++
++    def ready(self):
++        from . import signals  # noqa: F401

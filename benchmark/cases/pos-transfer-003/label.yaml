@@ -3,6 +3,7 @@ kind: positive
 stack: spring-boot
 source: synthetic
 reviewed: true
+difficulty: easy
 issues:
 - category: THIRD_PARTY_TRANSFER
   file: src/main/java/com/acme/shop/marketing/AudienceExporter.java

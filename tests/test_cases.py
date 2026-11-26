@@ -212,3 +212,35 @@ def test_case_set_hash_ignores_order_and_review_status_but_not_content(tmp_path:
     diff = tmp_path / "pos-a" / "pr.diff"
     diff.write_text(diff.read_text().replace("user.email", "user.phone"))
     assert case_set_hash(load_cases(tmp_path)) != original
+
+
+def test_difficulty_and_patterns_are_optional_and_validated(tmp_path: Path) -> None:
+    write_case(
+        tmp_path,
+        "pos-logging-001",
+        POSITIVE_LABEL + "difficulty: hard\npatterns: [indirect_name, via_helper]\n",
+    )
+
+    [case] = load_cases(tmp_path)
+
+    assert case.label.difficulty == "hard"
+    assert [str(p) for p in case.label.patterns] == ["indirect_name", "via_helper"]
+
+
+def test_unknown_pattern_is_rejected(tmp_path: Path) -> None:
+    write_case(tmp_path, "pos-logging-001", POSITIVE_LABEL + "patterns: [sneaky]\n")
+
+    with pytest.raises(CaseError, match="sneaky"):
+        load_cases(tmp_path)
+
+
+def test_adapted_case_needs_a_permissive_license(tmp_path: Path) -> None:
+    adapted = POSITIVE_LABEL.replace("source: synthetic", "source: adapted")
+    write_case(
+        tmp_path,
+        "pos-logging-001",
+        adapted + "url: https://github.com/example/app/commit/abc\nlicense: GPL-3.0\n",
+    )
+
+    with pytest.raises(CaseError, match=r"GPL-3\.0"):
+        load_cases(tmp_path)

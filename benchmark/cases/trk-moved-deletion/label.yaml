@@ -3,3 +3,4 @@ kind: tricky
 stack: spring-boot
 source: synthetic
 reviewed: true
+difficulty: easy

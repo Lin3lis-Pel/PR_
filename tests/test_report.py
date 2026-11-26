@@ -93,3 +93,64 @@ def test_as_config_must_differ_only_in_name_and_threshold() -> None:
     check_same_pipeline(v1, ReviewConfig(name="v1_1", prompt="v1", threshold=0.7))
     with pytest.raises(ReportError, match="prompt"):
         check_same_pipeline(v1, ReviewConfig(name="v2", prompt="v2"))
+
+
+def test_report_breaks_recall_and_clean_false_alarms_down_by_difficulty_and_pattern() -> None:
+    from benchmark.cases import Difficulty, Pattern
+
+    hard = Case(
+        id="pos-h",
+        label=Label(
+            id="pos-h",
+            kind=Kind.POSITIVE,
+            stack="django",
+            source=Source.SYNTHETIC,
+            difficulty=Difficulty.HARD,
+            patterns=(Pattern.INDIRECT_NAME,),
+            issues=(Issue(category=Category.PII_LOGGING, file="app/a.py", line=2),),
+        ),
+        diff=parse_diff(DIFF),
+        context_dir=None,
+        diff_text=DIFF,
+    )
+    clean = Case(
+        id="trk-c",
+        label=Label(
+            id="trk-c",
+            kind=Kind.TRICKY,
+            stack="django",
+            source=Source.SYNTHETIC,
+            difficulty=Difficulty.HARD,
+            patterns=(Pattern.MASKED,),
+        ),
+        diff=parse_diff(DIFF),
+        context_dir=None,
+        diff_text=DIFF,
+    )
+    alarm = Finding(file="app/a.py", line=2, category=Category.PII_LOGGING, confidence=0.9)
+    started = datetime(2026, 11, 26, tzinfo=UTC)
+    results = ResultsFile(
+        config="v1",
+        model="m/x",
+        provider=None,
+        split="dev",
+        git_commit=None,
+        dirty=False,
+        started_at=started,
+        finished_at=started,
+        runs=(
+            Run(
+                results=(
+                    CaseResult(case_id="pos-h"),
+                    CaseResult(case_id="trk-c", findings=(alarm,)),
+                )
+            ),
+        ),
+    )
+
+    text = format_report(results, [hard, clean])
+
+    assert "## By difficulty and pattern (threshold 0.0)" in text
+    assert "| difficulty: hard | 0% (n=1) | 100% (n=1) |" in text
+    assert "| pattern: indirect_name | 0% (n=1) | n/a |" in text
+    assert "| pattern: masked | n/a | 100% (n=1) |" in text

@@ -3,8 +3,14 @@ kind: positive
 stack: spring-boot
 source: synthetic
 reviewed: true
+difficulty: easy
 issues:
 - category: ERASURE_REGRESSION
   file: src/main/java/com/acme/shop/account/UserAccountService.java
   line: 19
   end_line: 21
+- category: ERASURE_REGRESSION
+  file: src/main/java/com/acme/shop/account/UserAccountService.java
+  line: 18
+  side: old
+  required: false

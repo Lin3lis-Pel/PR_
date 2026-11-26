@@ -3,6 +3,7 @@ kind: positive
 stack: django
 source: synthetic
 reviewed: true
+difficulty: easy
 issues:
 - category: THIRD_PARTY_TRANSFER
   file: integrations/crm.py

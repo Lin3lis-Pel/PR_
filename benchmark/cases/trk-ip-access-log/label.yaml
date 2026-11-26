@@ -3,3 +3,4 @@ kind: tricky
 stack: express-prisma
 source: synthetic
 reviewed: true
+difficulty: easy

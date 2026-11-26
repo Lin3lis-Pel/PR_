@@ -1,0 +1,12 @@
+id: pos-logging-005
+kind: positive
+stack: express-prisma
+source: synthetic
+reviewed: true
+difficulty: hard
+patterns:
+- error_tracker
+issues:
+- category: PII_LOGGING
+  file: src/middleware/auth.ts
+  line: 11
