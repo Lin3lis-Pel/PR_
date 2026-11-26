@@ -1,0 +1,49 @@
+diff --git a/integrations/crm.py b/integrations/crm.py
+new file mode 100644
+--- /dev/null
++++ b/integrations/crm.py
+@@ -0,0 +1,20 @@
++import requests
++from django.conf import settings
++
++CRM_CONTACTS_URL = "https://api.relatecrm.example/v2/contacts"
++
++
++def sync_customer(customer):
++    payload = {
++        "external_id": str(customer.pk),
++        "name": customer.display_name,
++        "email": customer.user.email,
++        "phone": customer.phone_number,
++    }
++    response = requests.post(
++        CRM_CONTACTS_URL,
++        json=payload,
++        headers={"Authorization": f"Bearer {settings.CRM_API_KEY}"},
++        timeout=10,
++    )
++    response.raise_for_status()
+diff --git a/customers/signals.py b/customers/signals.py
+--- a/customers/signals.py
++++ b/customers/signals.py
+@@ -1,5 +1,7 @@
+ from django.db.models.signals import post_save
+ from django.dispatch import receiver
++
++from integrations.crm import sync_customer
+ 
+ from .models import Customer
+ 
+@@ -8,3 +10,4 @@
+ def customer_saved(sender, instance, created, **kwargs):
+     if created:
+         instance.send_welcome_email()
++    sync_customer(instance)
+diff --git a/shop/settings.py b/shop/settings.py
+--- a/shop/settings.py
++++ b/shop/settings.py
+@@ -4,3 +4,4 @@
+ 
+ SECRET_KEY = env("SECRET_KEY")
+ DEBUG = env.bool("DEBUG", default=False)
++CRM_API_KEY = env("CRM_API_KEY")

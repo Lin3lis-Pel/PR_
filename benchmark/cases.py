@@ -1,0 +1,146 @@
+"""Benchmark cases: one folder per case holding pr.diff, label.yaml and an optional context/.
+
+load_cases validates every label against its diff, so a labelling mistake fails loudly
+instead of quietly distorting the numbers.
+"""
+
+from dataclasses import dataclass
+from enum import StrEnum
+from pathlib import Path
+from typing import Self
+
+import yaml
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
+
+from reviewer.diff import DiffError, ParsedDiff, parse_diff
+from reviewer.schemas import Category, Side
+
+
+class CaseError(ValueError):
+    """A case folder is malformed or its label disagrees with its diff."""
+
+
+class Kind(StrEnum):
+    POSITIVE = "positive"
+    NEGATIVE = "negative"
+    TRICKY = "tricky"
+
+
+class Source(StrEnum):
+    SYNTHETIC = "synthetic"
+    ADAPTED = "adapted"
+
+
+class Issue(BaseModel):
+    """One labelled risk. A finding matches it within [line - tolerance, end_line + tolerance]."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    category: Category
+    file: str
+    line: int = Field(ge=1)
+    end_line: int | None = None
+    side: Side = Side.NEW
+    tolerance: int = Field(default=3, ge=0)
+    required: bool = True
+
+    @model_validator(mode="after")
+    def _end_line_not_before_line(self) -> Self:
+        if self.end_line is not None and self.end_line < self.line:
+            raise ValueError(f"end_line {self.end_line} is before line {self.line}")
+        return self
+
+    @property
+    def last_line(self) -> int:
+        return self.end_line if self.end_line is not None else self.line
+
+
+class Label(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    id: str
+    kind: Kind
+    stack: str
+    source: Source
+    reviewed: bool = False
+    url: str | None = None
+    license: str | None = None
+    issues: tuple[Issue, ...] = ()
+
+    @model_validator(mode="after")
+    def _issues_fit_kind(self) -> Self:
+        has_required = any(issue.required for issue in self.issues)
+        if self.kind == Kind.POSITIVE and not has_required:
+            raise ValueError("a positive case needs at least one required issue")
+        if self.kind != Kind.POSITIVE and has_required:
+            raise ValueError(f"a {self.kind} case cannot have required issues")
+        return self
+
+    @model_validator(mode="after")
+    def _adapted_cases_are_credited(self) -> Self:
+        if self.source == Source.ADAPTED and not (self.url and self.license):
+            raise ValueError("an adapted case needs url and license")
+        return self
+
+
+@dataclass(frozen=True)
+class Case:
+    id: str
+    label: Label
+    diff: ParsedDiff
+    context_dir: Path | None
+    diff_text: str = ""  # pr.diff as written, for the reviewer
+
+
+def load_cases(cases_dir: Path) -> list[Case]:
+    folders = sorted(path for path in cases_dir.iterdir() if path.is_dir())
+    return [_load_case(folder) for folder in folders]
+
+
+def _load_case(folder: Path) -> Case:
+    name = folder.name
+    label = _read_label(folder)
+    if label.id != name:
+        raise CaseError(f"{name}: folder name does not match label id {label.id!r}")
+
+    diff_path = folder / "pr.diff"
+    if not diff_path.is_file():
+        raise CaseError(f"{name}: missing pr.diff")
+    diff_text = diff_path.read_text(encoding="utf-8")
+    try:
+        diff = parse_diff(diff_text)
+    except DiffError as error:
+        raise CaseError(f"{name}: pr.diff does not parse: {error}") from error
+
+    for issue in label.issues:
+        _check_issue_location(name, issue, diff)
+
+    context_dir = folder / "context"
+    return Case(
+        id=name,
+        label=label,
+        diff=diff,
+        context_dir=context_dir if context_dir.is_dir() else None,
+        diff_text=diff_text,
+    )
+
+
+def _read_label(folder: Path) -> Label:
+    label_path = folder / "label.yaml"
+    if not label_path.is_file():
+        raise CaseError(f"{folder.name}: missing label.yaml")
+    try:
+        return Label.model_validate(yaml.safe_load(label_path.read_text()))
+    except (yaml.YAMLError, ValidationError) as error:
+        raise CaseError(f"{folder.name}: invalid label.yaml: {error}") from error
+
+
+def _check_issue_location(name: str, issue: Issue, diff: ParsedDiff) -> None:
+    if issue.file not in diff.files:
+        raise CaseError(f"{name}: issue file {issue.file} is not in the diff")
+    changed = diff.changed_lines(issue.file, issue.side)
+    if not any(line in changed for line in range(issue.line, issue.last_line + 1)):
+        raise CaseError(
+            f"{name}: issue at {issue.file}:{issue.line}-{issue.last_line} ({issue.side} side)"
+            " covers no changed line"
+        )

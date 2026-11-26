@@ -1,0 +1,5 @@
+id: trk-ip-access-log
+kind: tricky
+stack: express-prisma
+source: synthetic
+reviewed: true

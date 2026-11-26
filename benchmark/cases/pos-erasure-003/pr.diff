@@ -1,0 +1,33 @@
+diff --git a/src/main/java/com/acme/shop/account/UserAccountService.java b/src/main/java/com/acme/shop/account/UserAccountService.java
+--- a/src/main/java/com/acme/shop/account/UserAccountService.java
++++ b/src/main/java/com/acme/shop/account/UserAccountService.java
+@@ -1,5 +1,6 @@
+ package com.acme.shop.account;
+ 
++import java.time.Instant;
+ import org.springframework.stereotype.Service;
+ import org.springframework.transaction.annotation.Transactional;
+ 
+@@ -15,6 +16,8 @@
+     @Transactional
+     public void deleteAccount(long accountId) {
+         UserAccount account = accounts.findById(accountId).orElseThrow();
+-        accounts.delete(account);
++        account.setDeleted(true);
++        account.setDeletedAt(Instant.now());
++        accounts.save(account);
+     }
+ }
+diff --git a/src/main/java/com/acme/shop/account/UserAccountRepository.java b/src/main/java/com/acme/shop/account/UserAccountRepository.java
+--- a/src/main/java/com/acme/shop/account/UserAccountRepository.java
++++ b/src/main/java/com/acme/shop/account/UserAccountRepository.java
+@@ -1,6 +1,9 @@
+ package com.acme.shop.account;
+ 
++import java.util.Optional;
+ import org.springframework.data.jpa.repository.JpaRepository;
+ 
+ public interface UserAccountRepository extends JpaRepository<UserAccount, Long> {
++
++    Optional<UserAccount> findByIdAndDeletedFalse(long id);
+ }

@@ -1,0 +1,32 @@
+diff --git a/src/jobs/purgeInactiveUsers.ts b/src/jobs/purgeInactiveUsers.ts
+deleted file mode 100644
+--- a/src/jobs/purgeInactiveUsers.ts
++++ /dev/null
+@@ -1,13 +0,0 @@
+-import { prisma } from "../db";
+-import { logger } from "../logger";
+-
+-const INACTIVE_MONTHS = 24;
+-
+-export async function purgeInactiveUsers() {
+-  const cutoff = new Date();
+-  cutoff.setMonth(cutoff.getMonth() - INACTIVE_MONTHS);
+-  const { count } = await prisma.user.deleteMany({
+-    where: { lastLoginAt: { lt: cutoff }, openOrders: { none: {} } },
+-  });
+-  logger.info("purged inactive users", { count });
+-}
+diff --git a/src/jobs/index.ts b/src/jobs/index.ts
+--- a/src/jobs/index.ts
++++ b/src/jobs/index.ts
+@@ -1,8 +1,8 @@
+ import cron from "node-cron";
+-import { purgeInactiveUsers } from "./purgeInactiveUsers";
++import { refreshExchangeRates } from "./exchangeRates";
+ import { sendAbandonedCartReminders } from "./abandonedCarts";
+ 
+ export function registerJobs() {
+-  cron.schedule("0 3 * * *", purgeInactiveUsers);
+   cron.schedule("0 * * * *", sendAbandonedCartReminders);
++  cron.schedule("*/30 * * * *", refreshExchangeRates);
+ }

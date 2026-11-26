@@ -1,0 +1,33 @@
+diff --git a/products/views.py b/products/views.py
+--- a/products/views.py
++++ b/products/views.py
+@@ -1,8 +1,12 @@
++from django.core.paginator import Paginator
+ from django.shortcuts import render
+ 
+ from .models import Product
+ 
++PAGE_SIZE = 24
++
+ 
+ def product_list(request):
+     products = Product.objects.filter(active=True).order_by("name")
+-    return render(request, "products/list.html", {"products": products})
++    page = Paginator(products, PAGE_SIZE).get_page(request.GET.get("page"))
++    return render(request, "products/list.html", {"page": page})
+diff --git a/products/templates/products/list.html b/products/templates/products/list.html
+--- a/products/templates/products/list.html
++++ b/products/templates/products/list.html
+@@ -1,8 +1,11 @@
+ {% extends "base.html" %}
+ {% block content %}
+ <ul class="products">
+-  {% for product in products %}
++  {% for product in page %}
+     <li>{{ product.name }} - {{ product.price }}</li>
+   {% endfor %}
+ </ul>
++{% if page.has_next %}
++  <a href="?page={{ page.next_page_number }}">Next</a>
++{% endif %}
+ {% endblock %}

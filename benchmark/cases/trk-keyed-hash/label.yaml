@@ -1,0 +1,5 @@
+id: trk-keyed-hash
+kind: tricky
+stack: spring-boot
+source: synthetic
+reviewed: true

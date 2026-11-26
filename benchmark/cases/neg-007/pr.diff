@@ -1,0 +1,21 @@
+diff --git a/src/config/flags.ts b/src/config/flags.ts
+--- a/src/config/flags.ts
++++ b/src/config/flags.ts
+@@ -1,3 +1,4 @@
+ export const flags = {
+   newSearch: process.env.FLAG_NEW_SEARCH === "true",
++  basketRedesign: process.env.FLAG_BASKET_REDESIGN === "true",
+ };
+diff --git a/src/basket/basket.routes.ts b/src/basket/basket.routes.ts
+--- a/src/basket/basket.routes.ts
++++ b/src/basket/basket.routes.ts
+@@ -1,6 +1,7 @@
+ import { Router } from "express";
+-import { renderBasket } from "./basket.view";
++import { flags } from "../config/flags";
++import { renderBasket, renderBasketV2 } from "./basket.view";
+ 
+ export const basketRouter = Router();
+ 
+-basketRouter.get("/basket", renderBasket);
++basketRouter.get("/basket", flags.basketRedesign ? renderBasketV2 : renderBasket);

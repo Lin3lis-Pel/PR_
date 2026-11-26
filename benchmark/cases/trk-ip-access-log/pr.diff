@@ -1,0 +1,35 @@
+diff --git a/src/middleware/accessLog.ts b/src/middleware/accessLog.ts
+new file mode 100644
+--- /dev/null
++++ b/src/middleware/accessLog.ts
+@@ -0,0 +1,17 @@
++import { NextFunction, Request, Response } from "express";
++import { logger } from "../logger";
++
++export function accessLog(req: Request, res: Response, next: NextFunction) {
++  const started = process.hrtime.bigint();
++  res.on("finish", () => {
++    const durationMs = Number(process.hrtime.bigint() - started) / 1e6;
++    logger.info("http", {
++      method: req.method,
++      path: req.path,
++      status: res.statusCode,
++      durationMs: Math.round(durationMs),
++      ip: req.ip,
++    });
++  });
++  next();
++}
+diff --git a/src/app.ts b/src/app.ts
+--- a/src/app.ts
++++ b/src/app.ts
+@@ -1,6 +1,9 @@
+ import express from "express";
+ import { checkout } from "./checkout/checkout.controller";
++import { accessLog } from "./middleware/accessLog";
+ 
+ export const app = express();
++app.set("trust proxy", 1);
++app.use(accessLog);
+ app.use(express.json());
+ app.post("/checkout", checkout);

@@ -1,0 +1,5 @@
+id: neg-008
+kind: negative
+stack: django
+source: synthetic
+reviewed: true

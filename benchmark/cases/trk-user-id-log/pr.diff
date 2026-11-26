@@ -1,0 +1,18 @@
+diff --git a/orders/views.py b/orders/views.py
+--- a/orders/views.py
++++ b/orders/views.py
+@@ -1,8 +1,14 @@
++import logging
++
+ from django.shortcuts import redirect
+ 
+ from .services import place_order
+ 
++logger = logging.getLogger(__name__)
++
+ 
+ def place_order_view(request):
+     order = place_order(request.user, request.session["cart"])
++    logger.info("Order %s placed by user %s (%d items)", order.pk, request.user.pk, order.items.count())
++    request.session.pop("cart", None)
+     return redirect("order-confirm", pk=order.pk)

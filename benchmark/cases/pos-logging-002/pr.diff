@@ -1,0 +1,21 @@
+diff --git a/src/checkout/checkout.controller.ts b/src/checkout/checkout.controller.ts
+--- a/src/checkout/checkout.controller.ts
++++ b/src/checkout/checkout.controller.ts
+@@ -7,6 +7,10 @@
+     const order = await placeOrder(req.body);
+     res.status(201).json({ orderId: order.id });
+   } catch (err) {
++    logger.error("Checkout failed", {
++      error: (err as Error).message,
++      payload: req.body,
++    });
+     res.status(500).json({ error: "checkout_failed" });
+   }
+ }
+diff --git a/src/config/timeouts.ts b/src/config/timeouts.ts
+--- a/src/config/timeouts.ts
++++ b/src/config/timeouts.ts
+@@ -1,2 +1,2 @@
+-export const PAYMENT_TIMEOUT_MS = 8000;
++export const PAYMENT_TIMEOUT_MS = 12000;
+ export const INVENTORY_TIMEOUT_MS = 3000;

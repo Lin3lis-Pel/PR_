@@ -1,0 +1,28 @@
+diff --git a/src/main/java/com/acme/shop/order/OrderService.java b/src/main/java/com/acme/shop/order/OrderService.java
+--- a/src/main/java/com/acme/shop/order/OrderService.java
++++ b/src/main/java/com/acme/shop/order/OrderService.java
+@@ -16,10 +16,12 @@
+         this.analytics = analytics;
+     }
+ 
+-    public Order place(Customer customer, Cart cart) {
++    public Order place(Customer customer, Cart cart, String clientIp) {
+         Order order = orders.save(Order.from(customer, cart));
+         analytics.track("order_placed", Map.of(
+                 "orderId", order.getId(),
++                "email", customer.getEmail(),
++                "clientIp", clientIp,
+                 "total", order.getTotal()));
+         return order;
+     }
+diff --git a/src/main/java/com/acme/shop/order/OrderTotals.java b/src/main/java/com/acme/shop/order/OrderTotals.java
+--- a/src/main/java/com/acme/shop/order/OrderTotals.java
++++ b/src/main/java/com/acme/shop/order/OrderTotals.java
+@@ -9,6 +9,6 @@
+     }
+ 
+     static BigDecimal withTax(BigDecimal net, BigDecimal rate) {
+-        return net.add(net.multiply(rate)).setScale(2, RoundingMode.DOWN);
++        return net.add(net.multiply(rate)).setScale(2, RoundingMode.HALF_UP);
+     }
+ }

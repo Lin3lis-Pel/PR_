@@ -1,0 +1,14 @@
+id: pos-storage-003
+kind: positive
+stack: spring-boot
+source: synthetic
+reviewed: true
+issues:
+- category: PII_STORAGE
+  file: src/main/java/com/acme/clinic/patient/Patient.java
+  line: 21
+  end_line: 22
+- category: PII_STORAGE
+  file: src/main/resources/db/migration/V12__add_patient_diagnosis.sql
+  line: 1
+  required: false

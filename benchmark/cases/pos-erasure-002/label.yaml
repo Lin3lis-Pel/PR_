@@ -1,0 +1,16 @@
+id: pos-erasure-002
+kind: positive
+stack: express-prisma
+source: synthetic
+reviewed: true
+issues:
+- category: ERASURE_REGRESSION
+  file: src/jobs/purgeInactiveUsers.ts
+  line: 1
+  end_line: 13
+  side: old
+- category: ERASURE_REGRESSION
+  file: src/jobs/index.ts
+  line: 6
+  side: old
+  required: false

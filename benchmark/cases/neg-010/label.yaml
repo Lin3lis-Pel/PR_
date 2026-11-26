@@ -1,0 +1,5 @@
+id: neg-010
+kind: negative
+stack: express-prisma
+source: synthetic
+reviewed: true

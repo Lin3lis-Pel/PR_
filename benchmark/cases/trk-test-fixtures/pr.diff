@@ -1,0 +1,46 @@
+diff --git a/test/fixtures/customers.ts b/test/fixtures/customers.ts
+new file mode 100644
+--- /dev/null
++++ b/test/fixtures/customers.ts
+@@ -0,0 +1,22 @@
++import { faker } from "@faker-js/faker";
++
++export function makeCustomer(overrides: Partial<CustomerFixture> = {}): CustomerFixture {
++  return {
++    name: faker.person.fullName(),
++    email: faker.internet.email({ provider: "example.com" }),
++    phone: "555-0142",
++    address: {
++      line1: faker.location.streetAddress(),
++      postcode: faker.location.zipCode(),
++      city: faker.location.city(),
++    },
++    ...overrides,
++  };
++}
++
++export interface CustomerFixture {
++  name: string;
++  email: string;
++  phone: string;
++  address: { line1: string; postcode: string; city: string };
++}
+diff --git a/test/checkout.test.ts b/test/checkout.test.ts
+new file mode 100644
+--- /dev/null
++++ b/test/checkout.test.ts
+@@ -0,0 +1,14 @@
++import request from "supertest";
++import { app } from "../src/app";
++import { makeCustomer } from "./fixtures/customers";
++
++describe("POST /checkout", () => {
++  it("creates an order for a valid basket", async () => {
++    const customer = makeCustomer({ email: "jane.doe@example.com" });
++    const response = await request(app)
++      .post("/checkout")
++      .send({ customer, items: [{ sku: "TEA-001", quantity: 2 }] });
++    expect(response.status).toBe(201);
++    expect(response.body.orderId).toBeDefined();
++  });
++});

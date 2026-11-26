@@ -1,0 +1,5 @@
+id: trk-user-id-log
+kind: tricky
+stack: django
+source: synthetic
+reviewed: true

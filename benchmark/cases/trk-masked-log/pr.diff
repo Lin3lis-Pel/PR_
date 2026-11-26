@@ -1,0 +1,33 @@
+diff --git a/core/masking.py b/core/masking.py
+new file mode 100644
+--- /dev/null
++++ b/core/masking.py
+@@ -0,0 +1,5 @@
++def mask_email(email):
++    local, _, domain = email.partition("@")
++    if not domain:
++        return "***"
++    return f"{local[:1]}***@{domain}"
+diff --git a/accounts/password_reset.py b/accounts/password_reset.py
+--- a/accounts/password_reset.py
++++ b/accounts/password_reset.py
+@@ -1,9 +1,17 @@
++import logging
++
+ from django.contrib.auth import get_user_model
+ 
++from core.masking import mask_email
++
+ from .emails import send_reset_link
++
++logger = logging.getLogger(__name__)
+ 
+ 
+ def request_reset(email):
+     user = get_user_model().objects.filter(email__iexact=email).first()
+-    if user is not None:
+-        send_reset_link(user)
++    if user is None:
++        logger.info("Password reset for unknown address %s", mask_email(email))
++        return
++    send_reset_link(user)

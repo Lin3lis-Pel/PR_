@@ -1,0 +1,65 @@
+diff --git a/src/main/java/com/acme/shop/analytics/AnalyticsIdentity.java b/src/main/java/com/acme/shop/analytics/AnalyticsIdentity.java
+new file mode 100644
+--- /dev/null
++++ b/src/main/java/com/acme/shop/analytics/AnalyticsIdentity.java
+@@ -0,0 +1,30 @@
++package com.acme.shop.analytics;
++
++import java.nio.charset.StandardCharsets;
++import java.security.GeneralSecurityException;
++import java.util.HexFormat;
++import javax.crypto.Mac;
++import javax.crypto.spec.SecretKeySpec;
++import org.springframework.beans.factory.annotation.Value;
++import org.springframework.stereotype.Component;
++
++@Component
++public class AnalyticsIdentity {
++
++    private final SecretKeySpec key;
++
++    public AnalyticsIdentity(@Value("${analytics.identity-secret}") String secret) {
++        this.key = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
++    }
++
++    public String subjectFor(String email) {
++        try {
++            Mac mac = Mac.getInstance("HmacSHA256");
++            mac.init(key);
++            byte[] digest = mac.doFinal(email.trim().toLowerCase().getBytes(StandardCharsets.UTF_8));
++            return HexFormat.of().formatHex(digest);
++        } catch (GeneralSecurityException e) {
++            throw new IllegalStateException(e);
++        }
++    }
++}
+diff --git a/src/main/java/com/acme/shop/auth/LoginListener.java b/src/main/java/com/acme/shop/auth/LoginListener.java
+--- a/src/main/java/com/acme/shop/auth/LoginListener.java
++++ b/src/main/java/com/acme/shop/auth/LoginListener.java
+@@ -1,6 +1,7 @@
+ package com.acme.shop.auth;
+ 
+ import com.acme.shop.analytics.AnalyticsClient;
++import com.acme.shop.analytics.AnalyticsIdentity;
+ import java.util.Map;
+ import org.springframework.context.event.EventListener;
+ import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
+@@ -10,13 +11,16 @@
+ public class LoginListener {
+ 
+     private final AnalyticsClient analytics;
++    private final AnalyticsIdentity identity;
+ 
+-    public LoginListener(AnalyticsClient analytics) {
++    public LoginListener(AnalyticsClient analytics, AnalyticsIdentity identity) {
+         this.analytics = analytics;
++        this.identity = identity;
+     }
+ 
+     @EventListener
+     public void onLogin(AuthenticationSuccessEvent event) {
+-        analytics.track("login", Map.of("method", "password"));
++        String subject = identity.subjectFor(event.getAuthentication().getName());
++        analytics.track("login", Map.of("method", "password", "subject", subject));
+     }
+ }

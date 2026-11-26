@@ -1,0 +1,55 @@
+diff --git a/prisma/schema.prisma b/prisma/schema.prisma
+--- a/prisma/schema.prisma
++++ b/prisma/schema.prisma
+@@ -1,11 +1,13 @@
+ model Payout {
+-  id          String       @id @default(cuid())
+-  sellerId    String
+-  seller      Seller       @relation(fields: [sellerId], references: [id])
+-  amountCents Int
+-  currency    String       @default("EUR")
+-  status      PayoutStatus @default(PENDING)
+-  createdAt   DateTime     @default(now())
++  id            String       @id @default(cuid())
++  sellerId      String
++  seller        Seller       @relation(fields: [sellerId], references: [id])
++  amountCents   Int
++  currency      String       @default("EUR")
++  accountHolder String
++  iban          String
++  status        PayoutStatus @default(PENDING)
++  createdAt     DateTime     @default(now())
+ }
+ 
+ enum PayoutStatus {
+diff --git a/prisma/migrations/20261102094500_payout_bank_details/migration.sql b/prisma/migrations/20261102094500_payout_bank_details/migration.sql
+new file mode 100644
+--- /dev/null
++++ b/prisma/migrations/20261102094500_payout_bank_details/migration.sql
+@@ -0,0 +1,3 @@
++-- AlterTable
++ALTER TABLE "Payout" ADD COLUMN "accountHolder" TEXT NOT NULL,
++ADD COLUMN "iban" TEXT NOT NULL;
+diff --git a/src/payouts/payouts.service.ts b/src/payouts/payouts.service.ts
+--- a/src/payouts/payouts.service.ts
++++ b/src/payouts/payouts.service.ts
+@@ -5,14 +5,18 @@
+ export interface CreatePayoutInput {
+   sellerId: string;
+   grossCents: number;
++  accountHolder: string;
++  iban: string;
+ }
+ 
+ export async function createPayout(input: CreatePayoutInput) {
+-  const feeCents = Math.floor(input.grossCents * PLATFORM_FEE_RATE);
++  const feeCents = Math.round(input.grossCents * PLATFORM_FEE_RATE);
+   return prisma.payout.create({
+     data: {
+       sellerId: input.sellerId,
+       amountCents: input.grossCents - feeCents,
++      accountHolder: input.accountHolder,
++      iban: input.iban.replace(/\s+/g, ""),
+     },
+   });
+ }

@@ -1,0 +1,14 @@
+id: pos-storage-001
+kind: positive
+stack: django
+source: synthetic
+reviewed: true
+issues:
+- category: PII_STORAGE
+  file: customers/models.py
+  line: 7
+  end_line: 8
+- category: PII_STORAGE
+  file: customers/migrations/0007_customer_phone_number_date_of_birth.py
+  line: 12
+  required: false

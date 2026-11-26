@@ -1,0 +1,10 @@
+id: pos-erasure-003
+kind: positive
+stack: spring-boot
+source: synthetic
+reviewed: true
+issues:
+- category: ERASURE_REGRESSION
+  file: src/main/java/com/acme/shop/account/UserAccountService.java
+  line: 19
+  end_line: 21

@@ -1,0 +1,47 @@
+diff --git a/src/delivery/geocode.ts b/src/delivery/geocode.ts
+new file mode 100644
+--- /dev/null
++++ b/src/delivery/geocode.ts
+@@ -0,0 +1,18 @@
++const GEOCODER_URL = "https://geo.mapfinder.example/v1/geocode";
++
++export interface Address {
++  recipientName: string;
++  line1: string;
++  postcode: string;
++  city: string;
++}
++
++export async function geocode(address: Address): Promise<{ lat: number; lng: number }> {
++  const query = `${address.line1}, ${address.postcode} ${address.city}`;
++  const url = `${GEOCODER_URL}?q=${encodeURIComponent(query)}&key=${process.env.GEOCODER_KEY}`;
++  const response = await fetch(url);
++  if (!response.ok) {
++    throw new Error(`geocoder returned ${response.status}`);
++  }
++  return response.json();
++}
+diff --git a/src/delivery/delivery.service.ts b/src/delivery/delivery.service.ts
+--- a/src/delivery/delivery.service.ts
++++ b/src/delivery/delivery.service.ts
+@@ -1,5 +1,6 @@
+ import { prisma } from "../db";
+ import { MAX_STOPS } from "./constants";
++import { geocode } from "./geocode";
+ import { planRoute } from "./routing";
+ 
+ export async function planTomorrow(depotId: string) {
+@@ -8,5 +9,6 @@
+     include: { shippingAddress: true },
+     take: MAX_STOPS,
+   });
+-  return planRoute(orders.map((order) => order.shippingAddress.postcode));
++  const points = await Promise.all(orders.map((order) => geocode(order.shippingAddress)));
++  return planRoute(points);
+ }
+diff --git a/src/delivery/constants.ts b/src/delivery/constants.ts
+--- a/src/delivery/constants.ts
++++ b/src/delivery/constants.ts
+@@ -1 +1 @@
+-export const MAX_STOPS = 40;
++export const MAX_STOPS = 55;

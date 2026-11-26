@@ -1,0 +1,10 @@
+id: pos-transfer-002
+kind: positive
+stack: express-prisma
+source: synthetic
+reviewed: true
+issues:
+- category: THIRD_PARTY_TRANSFER
+  file: src/delivery/geocode.ts
+  line: 11
+  end_line: 13

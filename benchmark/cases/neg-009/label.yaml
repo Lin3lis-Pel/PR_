@@ -1,0 +1,5 @@
+id: neg-009
+kind: negative
+stack: spring-boot
+source: synthetic
+reviewed: true

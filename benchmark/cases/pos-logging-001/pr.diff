@@ -1,0 +1,39 @@
+diff --git a/accounts/views.py b/accounts/views.py
+--- a/accounts/views.py
++++ b/accounts/views.py
+@@ -1,8 +1,12 @@
++import logging
++
+ from django.contrib.auth import login
+ from django.shortcuts import redirect, render
+ 
+ from .forms import SignupForm
+ from .services import create_user
++
++logger = logging.getLogger(__name__)
+ 
+ 
+ def signup(request):
+@@ -10,6 +14,7 @@
+         form = SignupForm(request.POST)
+         if form.is_valid():
+             user = create_user(form.cleaned_data)
++            logger.info("New signup: %s via %s", user.email, form.cleaned_data["source"])
+             login(request, user)
+             return redirect("home")
+     else:
+diff --git a/accounts/tests/test_signup.py b/accounts/tests/test_signup.py
+--- a/accounts/tests/test_signup.py
++++ b/accounts/tests/test_signup.py
+@@ -4,3 +4,11 @@
+ def test_signup_page_renders(client):
+     response = client.get(reverse("signup"))
+     assert response.status_code == 200
++
++
++def test_signup_redirects_home(client, db):
++    response = client.post(
++        reverse("signup"),
++        {"email": "new.user@example.com", "password": "not-a-real-pass-1", "source": "ad"},
++    )
++    assert response.status_code == 302

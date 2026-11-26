@@ -1,0 +1,2 @@
+*.diff text eol=lf
+*.yaml text eol=lf

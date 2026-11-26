@@ -1,0 +1,26 @@
+diff --git a/src/catalog/catalog.service.ts b/src/catalog/catalog.service.ts
+--- a/src/catalog/catalog.service.ts
++++ b/src/catalog/catalog.service.ts
+@@ -1,8 +1,21 @@
+ import { prisma } from "../db";
+ 
++const TTL_MS = 60_000;
++const cache = new Map<string, { at: number; products: unknown[] }>();
++
+ export async function listProducts(categoryId: string) {
+-  return prisma.product.findMany({
++  const hit = cache.get(categoryId);
++  if (hit && Date.now() - hit.at < TTL_MS) {
++    return hit.products;
++  }
++  const products = await prisma.product.findMany({
+     where: { categoryId, active: true },
+     orderBy: { name: "asc" },
+   });
++  cache.set(categoryId, { at: Date.now(), products });
++  return products;
+ }
++
++export function clearCatalogCache() {
++  cache.clear();
++}

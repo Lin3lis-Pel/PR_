@@ -1,0 +1,41 @@
+diff --git a/src/main/java/com/acme/clinic/patient/Patient.java b/src/main/java/com/acme/clinic/patient/Patient.java
+--- a/src/main/java/com/acme/clinic/patient/Patient.java
++++ b/src/main/java/com/acme/clinic/patient/Patient.java
+@@ -18,6 +18,9 @@
+     @Column(name = "assigned_doctor_id")
+     private Long assignedDoctorId;
+ 
++    @Column(name = "diagnosis", length = 500)
++    private String diagnosis;
++
+     public Long getId() {
+         return id;
+     }
+@@ -29,4 +32,12 @@
+     public Long getAssignedDoctorId() {
+         return assignedDoctorId;
+     }
++
++    public String getDiagnosis() {
++        return diagnosis;
++    }
++
++    public void setDiagnosis(String diagnosis) {
++        this.diagnosis = diagnosis;
++    }
+ }
+diff --git a/src/main/resources/db/migration/V12__add_patient_diagnosis.sql b/src/main/resources/db/migration/V12__add_patient_diagnosis.sql
+new file mode 100644
+--- /dev/null
++++ b/src/main/resources/db/migration/V12__add_patient_diagnosis.sql
+@@ -0,0 +1 @@
++ALTER TABLE patient ADD COLUMN diagnosis VARCHAR(500);
+diff --git a/src/main/resources/application.yml b/src/main/resources/application.yml
+--- a/src/main/resources/application.yml
++++ b/src/main/resources/application.yml
+@@ -4,4 +4,4 @@
+ logging:
+   level:
+     com.acme.clinic: INFO
+-    org.hibernate.SQL: DEBUG
++    org.hibernate.SQL: WARN

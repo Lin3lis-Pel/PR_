@@ -1,0 +1,5 @@
+id: trk-encrypted-column
+kind: tricky
+stack: django
+source: synthetic
+reviewed: true

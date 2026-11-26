@@ -1,0 +1,48 @@
+diff --git a/customers/models.py b/customers/models.py
+--- a/customers/models.py
++++ b/customers/models.py
+@@ -4,6 +4,8 @@
+ class Customer(models.Model):
+     user = models.OneToOneField("auth.User", on_delete=models.CASCADE)
+     display_name = models.CharField(max_length=80)
++    phone_number = models.CharField(max_length=20, blank=True)
++    date_of_birth = models.DateField(null=True, blank=True)
+     created_at = models.DateTimeField(auto_now_add=True)
+     marketing_opt_in = models.BooleanField(default=False)
+ 
+diff --git a/customers/migrations/0007_customer_phone_number_date_of_birth.py b/customers/migrations/0007_customer_phone_number_date_of_birth.py
+new file mode 100644
+--- /dev/null
++++ b/customers/migrations/0007_customer_phone_number_date_of_birth.py
+@@ -0,0 +1,20 @@
++from django.db import migrations, models
++
++
++class Migration(migrations.Migration):
++    dependencies = [
++        ("customers", "0006_customer_marketing_opt_in"),
++    ]
++
++    operations = [
++        migrations.AddField(
++            model_name="customer",
++            name="phone_number",
++            field=models.CharField(blank=True, max_length=20),
++        ),
++        migrations.AddField(
++            model_name="customer",
++            name="date_of_birth",
++            field=models.DateField(blank=True, null=True),
++        ),
++    ]
+diff --git a/customers/admin.py b/customers/admin.py
+--- a/customers/admin.py
++++ b/customers/admin.py
+@@ -5,5 +5,6 @@
+ 
+ @admin.register(Customer)
+ class CustomerAdmin(admin.ModelAdmin):
+-    list_display = ("display_name", "created_at")
++    list_display = ("display_name", "created_at", "marketing_opt_in")
++    list_filter = ("marketing_opt_in",)
+     search_fields = ("display_name",)

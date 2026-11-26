@@ -1,0 +1,37 @@
+diff --git a/src/jobs/syncStock.ts b/src/jobs/syncStock.ts
+new file mode 100644
+--- /dev/null
++++ b/src/jobs/syncStock.ts
+@@ -0,0 +1,20 @@
++import { prisma } from "../db";
++
++const WAREHOUSE_URL = "https://api.stockhub.example/v1/levels";
++
++export async function syncStock() {
++  const levels = await prisma.inventory.findMany({
++    select: { sku: true, quantity: true },
++  });
++  const response = await fetch(WAREHOUSE_URL, {
++    method: "PUT",
++    headers: {
++      "Content-Type": "application/json",
++      Authorization: `Bearer ${process.env.STOCKHUB_TOKEN}`,
++    },
++    body: JSON.stringify({ levels }),
++  });
++  if (!response.ok) {
++    throw new Error(`stock sync failed: ${response.status}`);
++  }
++}
+diff --git a/src/jobs/index.ts b/src/jobs/index.ts
+--- a/src/jobs/index.ts
++++ b/src/jobs/index.ts
+@@ -1,6 +1,8 @@
+ import cron from "node-cron";
+ import { sendAbandonedCartReminders } from "./abandonedCarts";
++import { syncStock } from "./syncStock";
+ 
+ export function registerJobs() {
+   cron.schedule("0 * * * *", sendAbandonedCartReminders);
++  cron.schedule("*/15 * * * *", syncStock);
+ }

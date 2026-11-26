@@ -1,0 +1,5 @@
+id: trk-moved-deletion
+kind: tricky
+stack: spring-boot
+source: synthetic
+reviewed: true

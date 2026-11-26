@@ -1,0 +1,20 @@
+diff --git a/pom.xml b/pom.xml
+--- a/pom.xml
++++ b/pom.xml
+@@ -3,13 +3,13 @@
+   <parent>
+     <groupId>org.springframework.boot</groupId>
+     <artifactId>spring-boot-starter-parent</artifactId>
+-    <version>3.3.4</version>
++    <version>3.3.5</version>
+   </parent>
+   <groupId>com.acme</groupId>
+   <artifactId>shop</artifactId>
+-  <version>1.14.0</version>
++  <version>1.14.1</version>
+   <properties>
+     <java.version>21</java.version>
+-    <testcontainers.version>1.20.1</testcontainers.version>
++    <testcontainers.version>1.20.3</testcontainers.version>
+   </properties>
+ </project>

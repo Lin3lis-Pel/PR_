@@ -1,0 +1,27 @@
+diff --git a/accounts/services.py b/accounts/services.py
+--- a/accounts/services.py
++++ b/accounts/services.py
+@@ -1,13 +1,11 @@
+ from django.db import transaction
+ 
+ from audit.log import audit_log
+-from orders.anonymise import anonymise_orders
+ 
+ 
+ def delete_account(user):
+     user_id = user.pk
+     with transaction.atomic():
+-        anonymise_orders(user)
+         user.customer.delete()
+         user.delete()
+     audit_log("account_deleted", user_id=user_id)
+diff --git a/accounts/views.py b/accounts/views.py
+--- a/accounts/views.py
++++ b/accounts/views.py
+@@ -10,5 +10,5 @@
+         user = request.user
+         logout(request)
+         delete_account(user)
+-        messages.info(request, "Your account was deleted.")
++        messages.info(request, "Your account has been deleted. Sorry to see you go!")
+     return redirect("home")

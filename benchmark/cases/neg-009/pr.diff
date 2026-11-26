@@ -1,0 +1,21 @@
+diff --git a/src/main/java/com/acme/shop/pricing/PriceCalculator.java b/src/main/java/com/acme/shop/pricing/PriceCalculator.java
+--- a/src/main/java/com/acme/shop/pricing/PriceCalculator.java
++++ b/src/main/java/com/acme/shop/pricing/PriceCalculator.java
+@@ -1,11 +1,15 @@
+ package com.acme.shop.pricing;
+ 
+ import java.math.BigDecimal;
++import java.math.RoundingMode;
+ 
+ public class PriceCalculator {
+ 
++    private static final BigDecimal HUNDRED = BigDecimal.valueOf(100);
++
+     public BigDecimal discounted(BigDecimal price, int percent) {
+-        double factor = 1 - percent / 100.0;
+-        return BigDecimal.valueOf(price.doubleValue() * factor);
++        BigDecimal factor = HUNDRED.subtract(BigDecimal.valueOf(percent))
++                .divide(HUNDRED, 4, RoundingMode.HALF_EVEN);
++        return price.multiply(factor).setScale(2, RoundingMode.HALF_EVEN);
+     }
+ }

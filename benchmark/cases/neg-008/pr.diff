@@ -1,0 +1,11 @@
+diff --git a/checkout/templates/checkout/confirm.html b/checkout/templates/checkout/confirm.html
+--- a/checkout/templates/checkout/confirm.html
++++ b/checkout/templates/checkout/confirm.html
+@@ -1,6 +1,6 @@
+ {% extends "base.html" %}
+ {% block content %}
+ <h1>Thank you, {{ order.customer.display_name }}!</h1>
+-<p>Your order #{{ order.pk }} has been recieved and will be shiped soon.</p>
++<p>Your order #{{ order.pk }} has been received and will be shipped soon.</p>
+ <p>Total: {{ order.total }} EUR</p>
+ {% endblock %}

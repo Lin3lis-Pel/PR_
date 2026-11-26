@@ -1,0 +1,45 @@
+diff --git a/src/main/java/com/acme/shop/account/UserAccountService.java b/src/main/java/com/acme/shop/account/UserAccountService.java
+--- a/src/main/java/com/acme/shop/account/UserAccountService.java
++++ b/src/main/java/com/acme/shop/account/UserAccountService.java
+@@ -7,18 +7,17 @@
+ public class UserAccountService {
+ 
+     private final UserAccountRepository accounts;
++    private final AnonymizationService anonymization;
+ 
+-    public UserAccountService(UserAccountRepository accounts) {
++    public UserAccountService(UserAccountRepository accounts, AnonymizationService anonymization) {
+         this.accounts = accounts;
++        this.anonymization = anonymization;
+     }
+ 
+     @Transactional
+     public void deleteAccount(long accountId) {
+         UserAccount account = accounts.findById(accountId).orElseThrow();
+-        account.setName(null);
+-        account.setEmail("deleted-" + account.getId() + "@invalid");
+-        account.setPhone(null);
+-        account.getAddresses().clear();
++        anonymization.anonymize(account);
+         accounts.save(account);
+     }
+ }
+diff --git a/src/main/java/com/acme/shop/account/AnonymizationService.java b/src/main/java/com/acme/shop/account/AnonymizationService.java
+new file mode 100644
+--- /dev/null
++++ b/src/main/java/com/acme/shop/account/AnonymizationService.java
+@@ -0,0 +1,14 @@
++package com.acme.shop.account;
++
++import org.springframework.stereotype.Service;
++
++@Service
++public class AnonymizationService {
++
++    public void anonymize(UserAccount account) {
++        account.setName(null);
++        account.setEmail("deleted-" + account.getId() + "@invalid");
++        account.setPhone(null);
++        account.getAddresses().clear();
++    }
++}

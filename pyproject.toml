@@ -1,0 +1,41 @@
+[project]
+name = "gdpr-reviewer"
+version = "0.1.0"
+description = "LLM reviewer that flags personal-data risks in pull requests, with a published benchmark."
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+# Runtime deps are added in the step that first needs them (LangGraph, langchain-openai,
+# FastAPI, FastMCP, Langfuse), not up front.
+dependencies = [
+    "openai>=3.60.0",
+    "pydantic>=2.9",
+    "python-dotenv>=1.2.4",
+    "pyyaml>=6.0",
+    "unidiff>=1.0.1",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "ruff>=0.8",
+]
+
+[tool.uv]
+# Top-level folders (reviewer/, benchmark/, service/, mcp_server/) are run in place,
+# not installed as a package.
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-ra --strict-markers -m 'not integration'"
+markers = [
+    "integration: calls a real LLM through OpenRouter (costs money; run with -m integration)",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]

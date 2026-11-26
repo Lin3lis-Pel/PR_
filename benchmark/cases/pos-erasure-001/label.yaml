@@ -1,0 +1,15 @@
+id: pos-erasure-001
+kind: positive
+stack: django
+source: synthetic
+reviewed: true
+issues:
+- category: ERASURE_REGRESSION
+  file: accounts/services.py
+  line: 10
+  side: old
+- category: ERASURE_REGRESSION
+  file: accounts/services.py
+  line: 4
+  side: old
+  required: false

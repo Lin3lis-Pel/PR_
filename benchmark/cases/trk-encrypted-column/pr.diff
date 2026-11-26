@@ -1,0 +1,53 @@
+diff --git a/customers/models.py b/customers/models.py
+--- a/customers/models.py
++++ b/customers/models.py
+@@ -1,10 +1,12 @@
+ from django.db import models
+ 
+-from core.fields import EncryptedCharField
++from core.fields import EncryptedCharField, EncryptedEmailField
+ 
+ 
+ class Customer(models.Model):
+     user = models.OneToOneField("auth.User", on_delete=models.CASCADE)
+     display_name = models.CharField(max_length=80)
+     tax_note = EncryptedCharField(max_length=200, blank=True)
++    backup_email = EncryptedEmailField(blank=True)
++    backup_email_added_at = models.DateTimeField(null=True, blank=True)
+     created_at = models.DateTimeField(auto_now_add=True)
+diff --git a/customers/retention.py b/customers/retention.py
+--- a/customers/retention.py
++++ b/customers/retention.py
+@@ -2,4 +2,5 @@
+ 
+ RETENTION = {
+     "tax_note": timedelta(days=365 * 10),
++    "backup_email": timedelta(days=365),
+ }
+diff --git a/customers/migrations/0008_customer_backup_email.py b/customers/migrations/0008_customer_backup_email.py
+new file mode 100644
+--- /dev/null
++++ b/customers/migrations/0008_customer_backup_email.py
+@@ -0,0 +1,22 @@
++from django.db import migrations, models
++
++import core.fields
++
++
++class Migration(migrations.Migration):
++    dependencies = [
++        ("customers", "0007_customer_tax_note"),
++    ]
++
++    operations = [
++        migrations.AddField(
++            model_name="customer",
++            name="backup_email",
++            field=core.fields.EncryptedEmailField(blank=True),
++        ),
++        migrations.AddField(
++            model_name="customer",
++            name="backup_email_added_at",
++            field=models.DateTimeField(blank=True, null=True),
++        ),
++    ]

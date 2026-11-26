@@ -1,0 +1,88 @@
+diff --git a/src/main/java/com/acme/shop/marketing/AudienceExporter.java b/src/main/java/com/acme/shop/marketing/AudienceExporter.java
+new file mode 100644
+--- /dev/null
++++ b/src/main/java/com/acme/shop/marketing/AudienceExporter.java
+@@ -0,0 +1,46 @@
++package com.acme.shop.marketing;
++
++import com.acme.shop.customer.CustomerRepository;
++import java.nio.charset.StandardCharsets;
++import java.security.MessageDigest;
++import java.security.NoSuchAlgorithmException;
++import java.util.HexFormat;
++import java.util.List;
++import java.util.Map;
++import org.springframework.stereotype.Component;
++import org.springframework.web.client.RestClient;
++
++@Component
++public class AudienceExporter {
++
++    private static final String AUDIENCE_URL =
++            "https://ads.adreach.example/v1/audiences/{audienceId}/members";
++
++    private final CustomerRepository customers;
++    private final RestClient http;
++
++    public AudienceExporter(CustomerRepository customers, RestClient http) {
++        this.customers = customers;
++        this.http = http;
++    }
++
++    public void export(String audienceId) {
++        List<String> members = customers.findAllWithMarketingConsent().stream()
++                .map(customer -> sha256(customer.getEmail().trim().toLowerCase()))
++                .toList();
++        http.post()
++                .uri(AUDIENCE_URL, audienceId)
++                .body(Map.of("hashed_emails", members))
++                .retrieve()
++                .toBodilessEntity();
++    }
++
++    private static String sha256(String value) {
++        try {
++            MessageDigest digest = MessageDigest.getInstance("SHA-256");
++            return HexFormat.of().formatHex(digest.digest(value.getBytes(StandardCharsets.UTF_8)));
++        } catch (NoSuchAlgorithmException e) {
++            throw new IllegalStateException(e);
++        }
++    }
++}
+diff --git a/src/main/java/com/acme/shop/marketing/MarketingScheduler.java b/src/main/java/com/acme/shop/marketing/MarketingScheduler.java
+--- a/src/main/java/com/acme/shop/marketing/MarketingScheduler.java
++++ b/src/main/java/com/acme/shop/marketing/MarketingScheduler.java
+@@ -1,5 +1,6 @@
+ package com.acme.shop.marketing;
+ 
++import org.springframework.beans.factory.annotation.Value;
+ import org.springframework.scheduling.annotation.Scheduled;
+ import org.springframework.stereotype.Component;
+ 
+@@ -7,13 +8,25 @@
+ public class MarketingScheduler {
+ 
+     private final NewsletterService newsletters;
++    private final AudienceExporter audiences;
++    private final String audienceId;
+ 
+-    public MarketingScheduler(NewsletterService newsletters) {
++    public MarketingScheduler(
++            NewsletterService newsletters,
++            AudienceExporter audiences,
++            @Value("${marketing.audience-id}") String audienceId) {
+         this.newsletters = newsletters;
++        this.audiences = audiences;
++        this.audienceId = audienceId;
+     }
+ 
+     @Scheduled(cron = "0 0 7 * * MON")
+     public void weeklyNewsletter() {
+         newsletters.sendWeekly();
+     }
++
++    @Scheduled(cron = "0 30 2 * * *")
++    public void nightlyAudienceExport() {
++        audiences.export(audienceId);
++    }
+ }

@@ -1,0 +1,5 @@
+id: trk-test-fixtures
+kind: tricky
+stack: express-prisma
+source: synthetic
+reviewed: true

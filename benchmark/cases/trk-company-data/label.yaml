@@ -1,0 +1,5 @@
+id: trk-company-data
+kind: tricky
+stack: spring-boot
+source: synthetic
+reviewed: true

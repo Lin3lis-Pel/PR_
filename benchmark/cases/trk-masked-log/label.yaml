@@ -1,0 +1,5 @@
+id: trk-masked-log
+kind: tricky
+stack: django
+source: synthetic
+reviewed: true
