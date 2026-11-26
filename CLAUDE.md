@@ -12,15 +12,15 @@ Greenfield. Build order: 0 prior-art check → 1 skeleton → 2 benchmark format
 v3 repo context, cheap model) → 6 service + GitHub Action → 6.5 learning from PRs →
 7 MCP server → 8 Cloud Run → 9 README + dashboard.
 
-**Current step: 4 (v1 baseline), code built, first paid run pending.** Steps 1 (skeleton),
-2 (case format, loader, scorer, splits) and 3 (first 30 cases) are done. Step 4 has the LLM
-seam, `review()`, config v1, the runner and the report; the v1 dev row needs the key in
-`.env` and a commit first. Step 3 left 30 synthetic cases, all
-`reviewed: true` (12 positive, 10 negative, 8 tricky across Django, Express + Prisma and
-Spring Boot), the policy in `docs/personal-data-policy.md`, and `benchmark/splits.yaml`
-(19 dev / 11 test). New or edited cases are hand-edited in place; there is no generator in
-the repo. Step 0 (prior-art check) is still open. Adapted real-world commits come in Step 5.
-Update this line when a step is done.
+**Current step: 5 (measured improvements), not started; begin with `/grill-me`.** Steps 1–4
+are done. The v1 dev row (`v1 x xiaomi/mimo-v2.6-pro`, 3 runs, commit 6e5320b) scored
+recall 100% (n=8), precision 96%, 0 false alarms on 11 clean PRs, $0.0004 per PR: the 30
+synthetic cases are too easy to measure improvements against, so Step 5 starts with harder
+and adapted real-world cases. The 30 cases are all `reviewed: true` (12 positive,
+10 negative, 8 tricky across Django, Express + Prisma and Spring Boot), the policy is in
+`docs/personal-data-policy.md`, and `benchmark/splits.yaml` has 19 dev / 11 test. Cases are
+hand-edited in place; there is no generator in the repo. Step 0 (prior-art check) is still
+open. The test split has not been run. Update this line when a step is done.
 
 Domain terms are in `GLOSSARY.md`; decisions are in `docs/adr/`. Read both before changing
 `benchmark/`.
