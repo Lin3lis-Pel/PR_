@@ -13,16 +13,16 @@ LangGraph; then 5a: 50 harder cases; then v3 repo context; RAG dropped, see
 `.scratch/step-5/spec.md`) → 6 service + GitHub Action → 6.5 learning from PRs →
 7 MCP server → 8 Cloud Run → 9 README + dashboard.
 
-**Current step: 5, wrap-up: re-run configs on the final case set, then Step 6.** The benchmark
-is final at 40 reviewed cases (30 easy + 10 hard synthetic, labelled with `difficulty`;
-24 dev / 16 test). The user stopped 5a after one batch ("too many cases"): no more cases and
-no adapted real-world cases for now. 5b results on the old 30-case set: v1 x pro recall 100%
-/ precision 96%; v1_1 identical; v1 x flash 100% / 86%, 4x cheaper; v2 100% / 100%; v2_1
-96% / 96%, p95 34.5s. Next: re-run v1, v2, v2_1 (v1_1 scored from v1) on the 24-case dev
-split, then the test split once for v1 x pro, best x pro and best x flash (ask first), then
-Step 6. Plan: `.scratch/step-5/spec.md`. Step 0 is done (`docs/prior-art.md`). The repo is
-MIT-licensed. Cases are hand-edited in place (no generator in the repo). Patterns for the 30
-easy cases are proposed but not yet approved. Update this line when a step is done.
+**Current step: 6 (service + GitHub Action), not started; begin with `/grill-me`.** Steps 0-5
+are done. The benchmark is final at 40 reviewed cases (30 easy + 10 hard synthetic; 24 dev
+/ 16 test). Best config: **v2** (v1 + "one finding per risk"). Final rows, 3 runs each, no
+false alarms on clean PRs in any of them: dev (24 cases) v1 x pro recall 93% / precision 94%,
+v2 x pro 97% / 97%, v2_1 x pro 93% / 93%; test (16 cases, run once on 2026-11-26) v1 x pro
+96% / 79%, v2 x pro 100% / 89%, v2 x flash 96% / 100% at $0.0001 per PR. Threshold (v1_1)
+and the LangGraph verify step (v2_1) showed no gain. Open: the Sentry category question on
+pos-logging-005, and the patterns for the 30 easy cases. Plan history:
+`.scratch/step-5/spec.md`. The repo is MIT-licensed. Cases are hand-edited in place (no
+generator in the repo). Update this line when a step is done.
 
 Domain terms are in `GLOSSARY.md`; decisions are in `docs/adr/`. Read both before changing
 `benchmark/`.
