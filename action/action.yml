@@ -18,6 +18,18 @@ inputs:
     description: Most inline comments per review; the rest are listed in the review body.
     required: false
     default: "10"
+  fail-on-error:
+    description: >-
+      Fail the job when the review could not run (service or GitHub error, unreadable
+      config). Findings never fail the job. Default false: errors are warnings.
+    required: false
+    default: "false"
+  config-file:
+    description: >-
+      Repo config read at the PR head. Files matching its ignored_paths globs are removed
+      from the diff before it is sent.
+    required: false
+    default: .gdpr-reviewer.yml
 runs:
   using: composite
   steps:
@@ -30,3 +42,5 @@ runs:
         INPUT_SERVICE_TOKEN: ${{ inputs.service-token }}
         INPUT_GITHUB_TOKEN: ${{ inputs.github-token }}
         INPUT_MAX_COMMENTS: ${{ inputs.max-comments }}
+        INPUT_FAIL_ON_ERROR: ${{ inputs.fail-on-error }}
+        INPUT_CONFIG_FILE: ${{ inputs.config-file }}

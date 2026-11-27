@@ -10,15 +10,21 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sys
+import urllib.error
+import urllib.parse
 import urllib.request
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Protocol
 
 FOOTER = "Automated check, not legal advice."
 SERVICE_TIMEOUT_S = 120
 GITHUB_TIMEOUT_S = 30
+# The service's default limit. A diff over it is skipped here instead of being sent.
+MAX_DIFF_BYTES = 200_000
+DEFAULT_CONFIG_FILE = ".gdpr-reviewer.yml"
 
 
 @dataclass(frozen=True)
@@ -26,21 +32,40 @@ class PullRequest:
     number: int
     base_sha: str
     head_sha: str  # the diff is taken up to this commit, and the review is posted against it
+    draft: bool = False
+    fork: bool = False  # head and base are different repositories: no secrets on its runs
 
 
 @dataclass(frozen=True)
 class Inputs:
     max_comments: int = 10
+    fail_on_error: bool = False
+    config_file: str = DEFAULT_CONFIG_FILE
 
 
 @dataclass
 class Outcome:
     summary: list[str]  # lines for the job summary
-    failed: bool = False  # findings never fail the job
+    warnings: list[str] = field(default_factory=list)  # shown as workflow warning annotations
+    failed: bool = False  # only an error with fail-on-error; findings never fail the job
+
+
+class CallError(Exception):
+    """A request to GitHub or the service that failed. The message never holds a token."""
+
+    def __init__(self, message: str, *, status: int | None = None) -> None:
+        super().__init__(message)
+        self.status = status
+
+
+class ConfigError(ValueError):
+    """The config file's ignored_paths can't be read by this Action's small reader."""
 
 
 class GitHubClient(Protocol):
     def get_diff(self, pr: PullRequest) -> str: ...
+
+    def get_file(self, path: str, ref: str) -> str | None: ...  # None: no such file
 
     def create_review(self, number: int, review: dict[str, Any]) -> None: ...
 
@@ -50,8 +75,41 @@ class ReviewerClient(Protocol):
 
 
 def run(pr: PullRequest, inputs: Inputs, github: GitHubClient, reviewer: ReviewerClient) -> Outcome:
+    if pr.draft:
+        return _skipped("the PR is a draft")
+    if pr.fork:
+        return _skipped("the PR comes from a fork, and workflow secrets are not available to it")
+    try:
+        return _review(pr, inputs, github, reviewer)
+    except Exception as error:  # the boundary: any failure is a warning, never a crash
+        message = f"GDPR PR Reviewer could not review this PR: {_describe(error)}"
+        return Outcome(summary=[message], warnings=[message], failed=inputs.fail_on_error)
+
+
+def _review(
+    pr: PullRequest, inputs: Inputs, github: GitHubClient, reviewer: ReviewerClient
+) -> Outcome:
     diff = github.get_diff(pr)
-    reply = reviewer.review(diff)
+    config = github.get_file(inputs.config_file, pr.head_sha)
+    try:
+        patterns = [_glob(p) for p in ignored_paths_from_config(config or "")]
+    except ConfigError as error:
+        raise ConfigError(
+            f"{inputs.config_file}: {error}. Nothing was sent, so no ignored file leaves the repo."
+        ) from None
+
+    files = _split_files(diff)
+    kept = [chunk for chunk in files if not _is_ignored(chunk, patterns)]
+    if files and not kept:
+        return _skipped(f"every changed file matches ignored_paths in {inputs.config_file}")
+    if not any(_has_hunk(chunk) for chunk in kept):
+        return _skipped("the diff has no changed lines (only renames or binary files)")
+    to_send = "".join(kept)
+    size = len(to_send.encode("utf-8"))
+    if size > MAX_DIFF_BYTES:
+        return _skipped(f"the diff is {size:,} bytes, over the {MAX_DIFF_BYTES:,}-byte limit")
+
+    reply = reviewer.review(to_send)
     findings = sorted(reply["findings"], key=lambda f: -f["confidence"])  # stable on ties
 
     inline: list[dict[str, Any]] = []
@@ -77,6 +135,18 @@ def run(pr: PullRequest, inputs: Inputs, github: GitHubClient, reviewer: Reviewe
     return Outcome(summary=[_summary_line(findings, len(inline), reply)])
 
 
+def _skipped(reason: str) -> Outcome:
+    return Outcome(summary=[f"GDPR PR Reviewer: skipped, {reason}."])
+
+
+def _describe(error: Exception) -> str:
+    if isinstance(error, (CallError, ConfigError)):
+        return str(error)
+    if isinstance(error, TimeoutError):
+        return "a request timed out"
+    return f"{type(error).__name__}: {error}"
+
+
 def _summary_line(findings: list[dict[str, Any]], inline: int, reply: dict[str, Any]) -> str:
     cost = reply.get("cost_usd")
     cost_text = "cost unknown" if cost is None else f"cost ${cost:.5f}"
@@ -88,6 +158,9 @@ def _summary_line(findings: list[dict[str, Any]], inline: int, reply: dict[str, 
         f"GDPR PR Reviewer: {len(findings)} {noun}, {inline} inline and "
         f"{len(findings) - inline} in the review body ({run_text})."
     )
+
+
+# --- the review's text ------------------------------------------------------------------
 
 
 def _review_body(
@@ -156,6 +229,158 @@ def _marker(fingerprint: str) -> str:
     return f"<!-- gdpr-reviewer:{fingerprint} -->"
 
 
+# --- ignored_paths: reading the config, matching files ------------------------------------
+
+
+def ignored_paths_from_config(text: str) -> list[str]:
+    """The top-level ignored_paths list, as a block list or a flow list. Other keys are
+    skipped unparsed: this is not a YAML parser, only enough of one for this key."""
+    lines = text.splitlines()
+    for index, raw in enumerate(lines):
+        line = _strip_comment(raw)
+        if not line.strip() or raw[:1] in (" ", "\t"):
+            continue  # blank, a comment, or nested under another key
+        key, colon, rest = line.partition(":")
+        if key.strip() != "ignored_paths" or not colon:
+            continue
+        rest = rest.strip()
+        return _flow_list(rest) if rest else _block_list(lines[index + 1 :])
+    return []
+
+
+def _flow_list(text: str) -> list[str]:
+    if not (text.startswith("[") and text.endswith("]")):
+        raise ConfigError("ignored_paths must be a list of path globs")
+    inner = text[1:-1]
+    if any(bracket in inner for bracket in "[]{}"):
+        raise ConfigError("ignored_paths must be a flat list of path globs")
+    items = [_unquote(item.strip()) for item in inner.split(",")]
+    return [item for item in items if item]
+
+
+def _block_list(lines: list[str]) -> list[str]:
+    items: list[str] = []
+    for raw in lines:
+        line = _strip_comment(raw)
+        if not line.strip():
+            continue
+        if raw[:1] not in (" ", "\t", "-"):
+            break  # the next top-level key
+        item = line.strip()
+        if not (item == "-" or item.startswith("- ")):
+            raise ConfigError("ignored_paths must be a list of path globs, one per '- ' line")
+        value = item[1:].strip()
+        if not value or value[0] in "[{":
+            raise ConfigError("each ignored_paths entry must be one path glob")
+        items.append(_unquote(value))
+    return items
+
+
+def _strip_comment(line: str) -> str:
+    """The line without a trailing '# comment' (a '#' at the start or after a space, outside
+    quotes)."""
+    quote = ""
+    for index, char in enumerate(line):
+        if quote:
+            if char == quote:
+                quote = ""
+        elif char in "'\"":
+            quote = char
+        elif char == "#" and (index == 0 or line[index - 1] in " \t"):
+            return line[:index].rstrip()
+    return line.rstrip()
+
+
+def _unquote(value: str) -> str:
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in "'\"":
+        return value[1:-1]
+    return value
+
+
+def _glob(pattern: str) -> re.Pattern[str]:
+    """A repo-relative path glob: '*' and '?' stay inside one folder, '**' spans any number
+    of folders (none included), and a trailing '/' means everything under that folder."""
+    pattern = pattern.strip().removeprefix("./").lstrip("/")
+    if pattern.endswith("/"):
+        pattern += "**"
+    out, index = [], 0
+    while index < len(pattern):
+        if pattern.startswith("**/", index):
+            out.append("(?:.*/)?")
+            index += 3
+        elif pattern.startswith("**", index):
+            out.append(".*")
+            index += 2
+        elif pattern[index] == "*":
+            out.append("[^/]*")
+            index += 1
+        elif pattern[index] == "?":
+            out.append("[^/]")
+            index += 1
+        else:
+            out.append(re.escape(pattern[index]))
+            index += 1
+    return re.compile("".join(out) + r"\Z")
+
+
+def _split_files(diff: str) -> list[str]:
+    """The diff cut into one chunk per file, each starting at its 'diff --git' line. Joining
+    the chunks gives back the diff unchanged."""
+    chunks: list[str] = []
+    current: list[str] = []
+    for line in diff.splitlines(keepends=True):
+        if line.startswith("diff --git ") and current:
+            chunks.append("".join(current))
+            current = []
+        current.append(line)
+    if current:
+        chunks.append("".join(current))
+    return chunks
+
+
+def _is_ignored(chunk: str, patterns: list[re.Pattern[str]]) -> bool:
+    return any(pattern.match(path) for path in _paths(chunk) for pattern in patterns)
+
+
+def _paths(chunk: str) -> set[str]:
+    """Every path a file chunk names: old and new, so a rename or a delete matches too."""
+    paths: set[str] = set()
+    header = ""
+    for line in chunk.splitlines():
+        if line.startswith("@@"):
+            break  # past the file header: '--- ' lines below are removed content
+        if line.startswith("diff --git "):
+            header = line
+        for prefix in ("rename from ", "rename to ", "copy from ", "copy to "):
+            if line.startswith(prefix):
+                paths.add(_git_path(line[len(prefix) :]))
+        if line.startswith(("--- ", "+++ ")):
+            path = _git_path(line[4:])
+            if path != "/dev/null":
+                paths.add(path.removeprefix("a/").removeprefix("b/"))
+    if not paths and header:  # binary files and pure mode changes have only the header
+        match = re.match(r"diff --git a/(.+) b/(.+)$", header)
+        if match:
+            paths |= {match.group(1), match.group(2)}
+    return paths
+
+
+def _git_path(text: str) -> str:
+    """Git quotes paths with unusual characters: "a/caf\\303\\251.py"."""
+    text = text.rstrip("\t")
+    if len(text) >= 2 and text[0] == text[-1] == '"':
+        try:
+            raw = text[1:-1].encode("latin-1", "backslashreplace").decode("unicode_escape")
+            return raw.encode("latin-1").decode("utf-8")
+        except (UnicodeDecodeError, UnicodeEncodeError):
+            return text[1:-1]
+    return text
+
+
+def _has_hunk(chunk: str) -> bool:
+    return any(line.startswith("@@ ") for line in chunk.splitlines())
+
+
 # --- the workflow's environment ---------------------------------------------------------
 
 
@@ -163,8 +388,15 @@ def pull_request_from_event(event: Mapping[str, Any]) -> PullRequest:
     pr = event.get("pull_request")
     if not isinstance(pr, Mapping):
         raise ValueError("this event has no pull_request; run the Action on pull_request events")
+    head_repo = (pr.get("head") or {}).get("repo") or {}
+    base_repo = (pr.get("base") or {}).get("repo") or {}
+    same_repo = bool(head_repo) and head_repo.get("full_name") == base_repo.get("full_name")
     return PullRequest(
-        number=int(pr["number"]), base_sha=pr["base"]["sha"], head_sha=pr["head"]["sha"]
+        number=int(pr["number"]),
+        base_sha=pr["base"]["sha"],
+        head_sha=pr["head"]["sha"],
+        draft=bool(pr.get("draft", False)),
+        fork=not same_repo,  # a deleted fork has no head repo: treat it as a fork
     )
 
 
@@ -176,7 +408,16 @@ def inputs_from_env(env: Mapping[str, str]) -> Inputs:
         raise ValueError(f"max-comments must be a whole number, got {raw!r}") from None
     if max_comments < 0:
         raise ValueError(f"max-comments must not be negative, got {max_comments}")
-    return Inputs(max_comments=max_comments)
+
+    raw_fail = env.get("INPUT_FAIL_ON_ERROR", "").strip().lower()
+    if raw_fail not in ("", "true", "false"):
+        raise ValueError(f"fail-on-error must be true or false, got {raw_fail!r}")
+
+    return Inputs(
+        max_comments=max_comments,
+        fail_on_error=raw_fail == "true",
+        config_file=env.get("INPUT_CONFIG_FILE", "").strip() or DEFAULT_CONFIG_FILE,
+    )
 
 
 # --- adapters: real HTTP, used only by main() ------------------------------------------
@@ -192,8 +433,14 @@ def _request(
     request.add_header("User-Agent", "gdpr-pr-reviewer-action")
     if data is not None:
         request.add_header("Content-Type", "application/json")
-    with urllib.request.urlopen(request, timeout=timeout) as response:
-        return response.read()
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            return response.read()
+    except urllib.error.HTTPError as error:
+        detail = error.read().decode("utf-8", "replace")[:300]
+        raise CallError(f"{method} {url}: HTTP {error.code} {detail}", status=error.code) from None
+    except urllib.error.URLError as error:
+        raise CallError(f"{method} {url}: {error.reason}") from None
 
 
 class GitHubAPI:
@@ -207,6 +454,19 @@ class GitHubAPI:
         raw = self._call(
             f"/compare/{pr.base_sha}...{pr.head_sha}", accept="application/vnd.github.diff"
         )
+        return raw.decode("utf-8")
+
+    def get_file(self, path: str, ref: str) -> str | None:
+        query = urllib.parse.urlencode({"ref": ref})
+        try:
+            raw = self._call(
+                f"/contents/{urllib.parse.quote(path)}?{query}",
+                accept="application/vnd.github.raw+json",
+            )
+        except CallError as error:
+            if error.status == 404:
+                return None
+            raise
         return raw.decode("utf-8")
 
     def create_review(self, number: int, review: dict[str, Any]) -> None:
@@ -248,6 +508,12 @@ class ServiceAPI:
         return reply
 
 
+def _annotation(kind: str, message: str) -> str:
+    """A workflow command; its message must not break onto a new line."""
+    escaped = message.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+    return f"::{kind}::{escaped}"
+
+
 def main(env: Mapping[str, str] = os.environ) -> int:
     with open(env["GITHUB_EVENT_PATH"], encoding="utf-8") as file:
         pr = pull_request_from_event(json.load(file))
@@ -263,6 +529,8 @@ def main(env: Mapping[str, str] = os.environ) -> int:
     )
     for line in outcome.summary:
         print(line)
+    for warning in outcome.warnings:
+        print(_annotation("warning", warning))
     summary_path = env.get("GITHUB_STEP_SUMMARY")
     if summary_path:
         with open(summary_path, "a", encoding="utf-8") as file:
