@@ -15,6 +15,7 @@ from action.review_pr import (
     CallError,
     Inputs,
     PullRequest,
+    ignored_paths_from_config,
     inputs_from_env,
     pull_request_from_event,
     run,
@@ -809,3 +810,13 @@ def test_an_error_reading_the_posted_texts_is_a_warning() -> None:
     assert github.reviews == []
     [warning] = outcome.warnings
     assert "HTTP 500" in warning
+
+
+def test_this_repos_own_config_is_read_by_the_action() -> None:
+    config = Path(".gdpr-reviewer.yml").read_text(encoding="utf-8")
+
+    assert ignored_paths_from_config(config) == [
+        "benchmark/cases/**",
+        "benchmark/results/**",
+        "tests/fixtures/**",
+    ]

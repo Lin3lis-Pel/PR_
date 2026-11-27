@@ -13,8 +13,9 @@ LangGraph; then 5a: 50 harder cases; then v3 repo context; RAG dropped, see
 `.scratch/step-5/spec.md`) → 6 service + GitHub Action → 6.5 learning from PRs →
 7 MCP server → 8 Cloud Run → 9 README + dashboard.
 
-**Current step: 6 (service + GitHub Action), not started; begin with `/grill-me`.** Steps 0-5
-are done. The benchmark is final at 40 reviewed cases (30 easy + 10 hard synthetic; 24 dev
+**Current step: 6 (service + GitHub Action), tickets 01-05 done; 06 (this repo reviews its
+own PRs) is built and waits for its first real PR run.** Spec and tickets:
+`.scratch/step-6/`. Steps 0-5 are done. The benchmark is final at 40 reviewed cases (30 easy + 10 hard synthetic; 24 dev
 / 16 test). Best config: **v2** (v1 + "one finding per risk"). Final rows, 3 runs each, no
 false alarms on clean PRs in any of them: dev (24 cases) v1 x pro recall 93% / precision 94%,
 v2 x pro 97% / 97%, v2_1 x pro 93% / 93%; test (16 cases, run once on 2026-11-26) v1 x pro
@@ -187,7 +188,8 @@ GLOSSARY.md      domain terms (created when the first term is settled)
 ## Stack
 
 Python 3.12, uv, Pydantic v2, `openai` SDK (pointed at OpenRouter), python-dotenv, pytest,
-ruff, LangGraph (pipelines only). Planned: FastAPI (6), FastMCP (7), Langfuse (optional, 6). Deploy: GCP Cloud Run + Secret Manager.
+ruff, LangGraph (pipelines only), FastAPI + uvicorn (service). Planned: FastMCP (7), Langfuse
+(optional; left out of Step 6). Deploy: GCP Cloud Run + Secret Manager.
 
 ## Commands
 
@@ -208,6 +210,16 @@ at this USD total), `--workers 4`, `--case <id>`
 
 CI (`.github/workflows/ci.yml`) runs `uv sync --locked`, ruff check, ruff format --check and
 pytest on every push to `main` and every PR. Commit `uv.lock` whenever dependencies change.
+`.github/workflows/gdpr-review.yml` reviews every same-repo PR with the reviewer itself: it
+starts the service on localhost (v2 x flash, repo secret `OPENROUTER_API_KEY`) and runs the
+local Action; `.gdpr-reviewer.yml` keeps the benchmark's fake data out of that review.
+
+```
+GDPR_REVIEWER_TOKEN=<random> uv run uvicorn service.app:app --reload   # the service, locally
+```
+
+The Action (`action/review_pr.py`) is stdlib-only: it runs on the runner's Python and can't
+import `reviewer/`. Its setup docs are `action/README.md`.
 
 The project is not an installed package (`[tool.uv] package = false`): the top-level folders
 run in place, and pytest adds the repo root to the path. Add a runtime dependency in the
@@ -216,7 +228,6 @@ step that first needs it, not before.
 Planned, not built yet:
 
 ```
-uv run uvicorn service.app:app --reload                              # Step 6
 uv run python -m mcp_server                                          # Step 7
 ```
 

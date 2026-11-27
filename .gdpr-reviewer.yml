@@ -1,0 +1,11 @@
+# GDPR PR Reviewer config for this repository's own pull requests.
+#
+# Files matching ignored_paths are removed from the diff before it is sent to the review
+# service, so they never leave the repo. Globs match repo-relative paths: * stays inside
+# one folder, ** spans any number of folders.
+ignored_paths:
+  # Benchmark cases are diffs full of fake personal data, written to be flagged. Reviewing
+  # them would comment on every case. Results files hold the model's findings on them.
+  - benchmark/cases/**
+  - benchmark/results/**
+  - tests/fixtures/**

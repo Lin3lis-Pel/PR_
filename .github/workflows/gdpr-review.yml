@@ -1,0 +1,95 @@
+name: GDPR review
+
+# This repo reviews its own pull requests: the job starts the review service on localhost
+# from this checkout and runs the local Action against it. Until the service is deployed
+# (Step 8), nothing outside the job is needed except the OPENROUTER_API_KEY secret.
+#
+# Data transfer: the PR's diff (minus .gdpr-reviewer.yml's ignored_paths) goes to
+# OpenRouter and the upstream model provider (Xiaomi).
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: gdpr-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    # Drafts wait until they are ready. Fork PRs get no secrets, so the job can't start the
+    # service; the Action would skip them anyway.
+    if: >-
+      !github.event.pull_request.draft &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SERVICE_URL: http://127.0.0.1:8000
+    steps:
+      - name: Check the OpenRouter secret
+        id: secret
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: |
+          if [ -z "$OPENROUTER_API_KEY" ]; then
+            echo "::warning::OPENROUTER_API_KEY is not set as a repo secret; the PR is not reviewed."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.secret.outputs.ready == 'true'
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@v6
+        if: steps.secret.outputs.ready == 'true'
+        with:
+          enable-cache: true
+
+      - name: Install the service
+        if: steps.secret.outputs.ready == 'true'
+        run: uv sync --locked --no-dev
+
+      - name: Make a token for this job
+        if: steps.secret.outputs.ready == 'true'
+        run: |
+          token="$(python3 -c 'import secrets; print(secrets.token_hex(32))')"
+          echo "::add-mask::$token"
+          echo "GDPR_REVIEWER_TOKEN=$token" >> "$GITHUB_ENV"
+
+      - name: Start the review service
+        if: steps.secret.outputs.ready == 'true'
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          GDPR_REVIEWER_CONFIG: v2
+          GDPR_REVIEWER_MODEL: xiaomi/mimo-v2.6-flash
+          GDPR_REVIEWER_PROVIDER: xiaomi
+        run: |
+          nohup uv run --no-sync uvicorn service.app:app --host 127.0.0.1 --port 8000 \
+            > "$RUNNER_TEMP/service.log" 2>&1 &
+          for _ in $(seq 1 60); do
+            if curl -fsS "$SERVICE_URL/healthz"; then exit 0; fi
+            sleep 1
+          done
+          echo "::error::The review service did not start."
+          cat "$RUNNER_TEMP/service.log"
+          exit 1
+
+      - name: Review the pull request
+        if: steps.secret.outputs.ready == 'true'
+        uses: ./action
+        with:
+          service-url: ${{ env.SERVICE_URL }}
+          service-token: ${{ env.GDPR_REVIEWER_TOKEN }}
+
+      # The service logs metadata only (sizes, counts, cost, latency, model), never the diff.
+      - name: Show the service log
+        if: always() && steps.secret.outputs.ready == 'true'
+        run: cat "$RUNNER_TEMP/service.log" 2>/dev/null || echo "The service never started."
