@@ -60,7 +60,10 @@ PR event -> Action: fetch diff, drop ignored_paths -> POST /review (bearer token
   `contents: read`.
 - Skips, each with a job-summary notice: draft PRs, fork PRs (secrets are not available to
   them), diffs over the limit, diffs that are empty after filtering.
-- It fetches the full PR diff on every run (`Accept: application/vnd.github.diff`).
+- It fetches the full PR diff on every run: the compare diff between the event's base and
+  head commits (`Accept: application/vnd.github.diff`). That is the same three-dot diff the
+  PR shows, pinned to the commit the review is posted against, so a push during the run
+  can't shift the lines (changed 2026-11-27, in ticket 02).
 - `ignored_paths` from `.gdpr-reviewer.yml` (read from the PR head) uses globs on
   repo-relative paths, and `**` matches any number of folders. A rename is dropped if
   either its old or its new path matches. A deleted file is matched on its old path. Other

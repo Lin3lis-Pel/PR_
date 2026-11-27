@@ -1,0 +1,32 @@
+name: GDPR PR Reviewer
+description: >-
+  Posts one review with inline comments on personal-data risks in a pull request.
+  The diff is sent to the review service, and from there to OpenRouter and the upstream
+  model provider. Automated check, not legal advice.
+inputs:
+  service-url:
+    description: Base URL of the review service (POST /review is called on it).
+    required: true
+  service-token:
+    description: Bearer token the service expects (GDPR_REVIEWER_TOKEN). Pass it from a secret.
+    required: true
+  github-token:
+    description: Token used to read the diff and post the review. Needs pull-requests write.
+    required: false
+    default: ${{ github.token }}
+  max-comments:
+    description: Most inline comments per review; the rest are listed in the review body.
+    required: false
+    default: "10"
+runs:
+  using: composite
+  steps:
+    - name: Review the pull request
+      shell: bash
+      # Inputs reach the script only through env, never interpolated into this line.
+      run: python3 "$GITHUB_ACTION_PATH/review_pr.py"
+      env:
+        INPUT_SERVICE_URL: ${{ inputs.service-url }}
+        INPUT_SERVICE_TOKEN: ${{ inputs.service-token }}
+        INPUT_GITHUB_TOKEN: ${{ inputs.github-token }}
+        INPUT_MAX_COMMENTS: ${{ inputs.max-comments }}

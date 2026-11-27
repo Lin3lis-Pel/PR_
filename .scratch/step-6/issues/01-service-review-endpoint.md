@@ -9,7 +9,7 @@ uvicorn.
 
 **Blocked by:** None (can start immediately)
 
-**Status:** done (2026-11-27, not committed)
+**Status:** done (2026-11-27)
 
 - [x] `POST /review` takes `{diff}` and returns `{findings, config, model, provider,
       cost_usd, latency_s}`. Each finding is a `Finding` plus `postable: bool` and
