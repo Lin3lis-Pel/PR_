@@ -25,6 +25,9 @@ GITHUB_TIMEOUT_S = 30
 # The service's default limit. A diff over it is skipped here instead of being sent.
 MAX_DIFF_BYTES = 200_000
 DEFAULT_CONFIG_FILE = ".gdpr-reviewer.yml"
+# Reading earlier comments: 100 per page, at most 30 pages (3,000) per kind.
+PAGE_SIZE = 100
+MAX_PAGES = 30
 
 
 @dataclass(frozen=True)
@@ -69,6 +72,8 @@ class GitHubClient(Protocol):
 
     def create_review(self, number: int, review: dict[str, Any]) -> None: ...
 
+    def list_posted_texts(self, number: int) -> list[str]: ...  # review and comment bodies
+
 
 class ReviewerClient(Protocol):
     def review(self, diff: str) -> dict[str, Any]: ...
@@ -110,7 +115,12 @@ def _review(
         return _skipped(f"the diff is {size:,} bytes, over the {MAX_DIFF_BYTES:,}-byte limit")
 
     reply = reviewer.review(to_send)
-    findings = sorted(reply["findings"], key=lambda f: -f["confidence"])  # stable on ties
+    findings = _one_per_fingerprint(sorted(reply["findings"], key=lambda f: -f["confidence"]))
+    already = 0
+    if findings:  # skip the extra GitHub calls when there is nothing to post anyway
+        posted = posted_fingerprints(github.list_posted_texts(pr.number))
+        new = [f for f in findings if f["fingerprint"] not in posted]
+        already, findings = len(findings) - len(new), new
 
     inline: list[dict[str, Any]] = []
     elsewhere: list[tuple[dict[str, Any], str]] = []  # (finding, why it is not inline)
@@ -132,7 +142,28 @@ def _review(
                 "comments": [_inline(f) for f in inline],
             },
         )
-    return Outcome(summary=[_summary_line(findings, len(inline), reply)])
+    return Outcome(summary=[_summary_line(findings, len(inline), already, reply)])
+
+
+def _one_per_fingerprint(findings: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Keep the first (highest-confidence) finding of each fingerprint: the same risk on two
+    identical lines is one comment."""
+    seen: set[str] = set()
+    unique = []
+    for finding in findings:
+        if finding["fingerprint"] not in seen:
+            seen.add(finding["fingerprint"])
+            unique.append(finding)
+    return unique
+
+
+_MARKER = re.compile(r"<!-- gdpr-reviewer:([^\s<>]+) -->")
+
+
+def posted_fingerprints(texts: list[str]) -> set[str]:
+    """Fingerprints in the reviewer's own markers. Only the exact HTML-comment form counts,
+    which model text can't produce: _safe() turns its '<!--' into '&lt;!--'."""
+    return {match for text in texts for match in _MARKER.findall(text)}
 
 
 def _skipped(reason: str) -> Outcome:
@@ -147,16 +178,24 @@ def _describe(error: Exception) -> str:
     return f"{type(error).__name__}: {error}"
 
 
-def _summary_line(findings: list[dict[str, Any]], inline: int, reply: dict[str, Any]) -> str:
+def _summary_line(
+    findings: list[dict[str, Any]], inline: int, already: int, reply: dict[str, Any]
+) -> str:
+    """findings: the new ones this run posts. already: shown findings that were on the PR."""
     cost = reply.get("cost_usd")
     cost_text = "cost unknown" if cost is None else f"cost ${cost:.5f}"
     run_text = f"config {reply['config']} x model {reply['model']}, {cost_text}"
+    earlier = f"{already} already posted on this PR" if already else ""
     if not findings:
+        if earlier:
+            return f"GDPR PR Reviewer: no new findings; {earlier} ({run_text})."
         return f"GDPR PR Reviewer: no findings ({run_text})."
     noun = "finding" if len(findings) == 1 else "findings"
     return (
         f"GDPR PR Reviewer: {len(findings)} {noun}, {inline} inline and "
-        f"{len(findings) - inline} in the review body ({run_text})."
+        f"{len(findings) - inline} in the review body"
+        + (f"; {earlier}" if earlier else "")
+        + f" ({run_text})."
     )
 
 
@@ -185,6 +224,7 @@ def _review_body(
             where = _safe(f"{finding['file']}:{finding['line']}").replace("`", "'")
             lines.append(
                 f"- `{where}` **{finding['category']}** ({why}): {_safe(finding['explanation'])}"
+                f" {_marker(finding['fingerprint'])}"  # so a later run doesn't list it again
             )
     lines += [
         "",
@@ -471,6 +511,21 @@ class GitHubAPI:
 
     def create_review(self, number: int, review: dict[str, Any]) -> None:
         self._call(f"/pulls/{number}/reviews", method="POST", body=review)
+
+    def list_posted_texts(self, number: int) -> list[str]:
+        texts: list[str] = []
+        for kind in ("comments", "reviews"):  # inline comments, then review bodies
+            texts += [item.get("body") or "" for item in self._pages(f"/pulls/{number}/{kind}")]
+        return texts
+
+    def _pages(self, path: str) -> list[dict[str, Any]]:
+        items: list[dict[str, Any]] = []
+        for page in range(1, MAX_PAGES + 1):
+            batch = json.loads(self._call(f"{path}?per_page={PAGE_SIZE}&page={page}"))
+            items += batch
+            if len(batch) < PAGE_SIZE:
+                break
+        return items
 
     def _call(
         self,

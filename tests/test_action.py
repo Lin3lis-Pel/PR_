@@ -40,6 +40,7 @@ class FakeGitHub:
     diff: str = DIFF
     files: dict[str, str] = field(default_factory=dict)  # path at the PR head -> content
     reviews: list[dict[str, Any]] = field(default_factory=list)
+    posted: list[str] = field(default_factory=list)  # texts on the PR before this fake's reviews
     fail_on: str | None = None  # name of the call that raises CallError
     calls: list[str] = field(default_factory=list)
 
@@ -57,6 +58,15 @@ class FakeGitHub:
         self._called("create_review")
         assert number == PR.number
         self.reviews.append(review)
+
+    def list_posted_texts(self, number: int) -> list[str]:
+        """Bodies of the PR's reviews and review comments: seeded ones, then this fake's own,
+        so a second run on the same fake sees what the first one posted."""
+        self._called("list_posted_texts")
+        assert number == PR.number
+        own = [r["body"] for r in self.reviews]
+        own += [c["body"] for r in self.reviews for c in r["comments"]]
+        return self.posted + own
 
     def _called(self, name: str) -> None:
         self.calls.append(name)
@@ -223,9 +233,9 @@ def test_with_no_postable_finding_the_review_has_only_a_body() -> None:
 def test_the_body_counts_findings_by_category_and_names_config_and_model() -> None:
     github = FakeGitHub()
     findings = [
-        finding(category="PII_LOGGING", line=1),
-        finding(category="PII_LOGGING", line=2),
-        finding(category="PII_STORAGE", line=3),
+        finding(category="PII_LOGGING", line=1, fingerprint="a"),
+        finding(category="PII_LOGGING", line=2, fingerprint="b"),
+        finding(category="PII_STORAGE", line=3, fingerprint="c"),
     ]
 
     run(PR, INPUTS, github, FakeReviewer(findings))
@@ -242,7 +252,8 @@ def test_the_body_counts_findings_by_category_and_names_config_and_model() -> No
 def test_cost_never_appears_in_the_review() -> None:
     github = FakeGitHub()
 
-    run(PR, INPUTS, github, FakeReviewer([finding(), finding(postable=False)], cost_usd=0.00019))
+    findings = [finding(), finding(postable=False, fingerprint="body")]
+    run(PR, INPUTS, github, FakeReviewer(findings, cost_usd=0.00019))
 
     review = github.reviews[0]
     everything = review["body"] + "".join(c["body"] for c in review["comments"])
@@ -257,7 +268,7 @@ def test_model_text_cannot_mention_people_or_forge_a_marker() -> None:
         suggested_fix="Ping @org/team",
         article="@someone",
     )
-    hidden = finding(postable=False, line=40, explanation="Also @octocat")
+    hidden = finding(postable=False, line=40, explanation="Also @octocat", fingerprint="hidden")
 
     run(PR, INPUTS, github, FakeReviewer([sneaky, hidden]))
 
@@ -284,7 +295,11 @@ def test_a_clean_pr_gets_no_review_only_a_summary_line() -> None:
 
 def test_the_summary_says_where_the_findings_went_and_what_they_cost() -> None:
     github = FakeGitHub()
-    findings = [finding(line=1), finding(line=2), finding(line=40, postable=False)]
+    findings = [
+        finding(line=1, fingerprint="a"),
+        finding(line=2, fingerprint="b"),
+        finding(line=40, postable=False, fingerprint="c"),
+    ]
 
     outcome = run(PR, Inputs(max_comments=1), github, FakeReviewer(findings, cost_usd=0.00019))
 
@@ -672,3 +687,125 @@ def test_a_removed_line_that_looks_like_a_file_header_is_not_a_path() -> None:
     )
 
     assert _sent(tricky + DIFF, "ignored_paths: [vendor/**]\n") == tricky + DIFF
+
+
+# --- no repeat comments -----------------------------------------------------------------
+
+
+def test_a_second_run_with_the_same_findings_posts_nothing() -> None:
+    github = FakeGitHub()
+    findings = [finding(fingerprint="a"), finding(fingerprint="b", postable=False, line=40)]
+
+    run(PR, INPUTS, github, FakeReviewer(findings))
+    second = run(PR, INPUTS, github, FakeReviewer(findings))
+
+    assert len(github.reviews) == 1  # only the first run's
+    [line] = second.summary
+    assert "no new findings" in line
+    assert "2 already posted" in line
+
+
+def test_a_finding_whose_line_moved_but_not_its_content_is_not_posted_again() -> None:
+    # The service gives the same fingerprint when only the line number changed.
+    github = FakeGitHub()
+    run(PR, INPUTS, github, FakeReviewer([finding(fingerprint="same", line=2)]))
+
+    run(PR, INPUTS, github, FakeReviewer([finding(fingerprint="same", line=9)]))
+
+    assert len(github.reviews) == 1
+
+
+def test_only_the_new_finding_is_posted() -> None:
+    github = FakeGitHub()
+    run(PR, INPUTS, github, FakeReviewer([finding(fingerprint="old")]))
+
+    outcome = run(
+        PR,
+        INPUTS,
+        github,
+        FakeReviewer([finding(fingerprint="old"), finding(fingerprint="new", line=1)]),
+    )
+
+    second = github.reviews[1]
+    assert _inline_fingerprints(second) == ["new"]
+    assert "1 possible personal-data risk:" in second["body"]
+    assert "1 already posted" in outcome.summary[0]
+
+
+def test_the_cap_and_ordering_apply_to_new_findings_only() -> None:
+    github = FakeGitHub(
+        posted=["<!-- gdpr-reviewer:top -->", "earlier body\n<!-- gdpr-reviewer:second -->"]
+    )
+    findings = [
+        finding(fingerprint="top", confidence=0.99, line=1),
+        finding(fingerprint="second", confidence=0.98, line=2),
+        finding(fingerprint="low", confidence=0.5, line=3, explanation="Low one."),
+        finding(fingerprint="mid", confidence=0.7, line=4),
+    ]
+
+    run(PR, Inputs(max_comments=1), github, FakeReviewer(findings))
+
+    [review] = github.reviews
+    assert _inline_fingerprints(review) == ["mid"]
+    assert "Low one." in review["body"]
+    assert "comment limit" in review["body"]
+
+
+def test_a_finding_listed_in_an_earlier_review_body_is_not_listed_again() -> None:
+    github = FakeGitHub()
+    hidden = finding(fingerprint="hidden", postable=False, line=40, explanation="Elsewhere.")
+    run(PR, INPUTS, github, FakeReviewer([hidden]))
+    assert "<!-- gdpr-reviewer:hidden -->" in github.reviews[0]["body"]
+
+    run(PR, INPUTS, github, FakeReviewer([hidden, finding(fingerprint="fresh")]))
+
+    assert "Elsewhere." not in github.reviews[1]["body"]
+
+
+def test_only_the_reviewers_own_marker_form_counts() -> None:
+    github = FakeGitHub(
+        posted=[
+            "<!-- other-tool:f00d -->",  # another bot's marker
+            "gdpr-reviewer:f00d",  # not inside an HTML comment
+            "&lt;!-- gdpr-reviewer:f00d -->",  # model text, made inert by an earlier run
+            "`<!-- gdpr-reviewer:f00d` without its end",
+        ]
+    )
+
+    run(PR, INPUTS, github, FakeReviewer([finding(fingerprint="f00d")]))
+
+    [review] = github.reviews
+    assert _inline_fingerprints(review) == ["f00d"]
+
+
+def test_findings_that_share_a_fingerprint_are_posted_once() -> None:
+    # Two identical lines in one file give the same fingerprint: one comment is enough.
+    github = FakeGitHub()
+    twins = [
+        finding(fingerprint="twin", line=2, confidence=0.9),
+        finding(fingerprint="twin", line=5, confidence=0.8),
+    ]
+
+    run(PR, INPUTS, github, FakeReviewer(twins))
+
+    [review] = github.reviews
+    [comment] = review["comments"]
+    assert comment["line"] == 2
+
+
+def test_the_posted_texts_are_read_only_when_there_is_something_to_post() -> None:
+    github = FakeGitHub()
+
+    run(PR, INPUTS, github, FakeReviewer([]))
+
+    assert "list_posted_texts" not in github.calls
+
+
+def test_an_error_reading_the_posted_texts_is_a_warning() -> None:
+    github = FakeGitHub(fail_on="list_posted_texts")
+
+    outcome = run(PR, INPUTS, github, FakeReviewer([finding()]))
+
+    assert github.reviews == []
+    [warning] = outcome.warnings
+    assert "HTTP 500" in warning
