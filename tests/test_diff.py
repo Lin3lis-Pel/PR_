@@ -165,3 +165,28 @@ def test_malformed_hunk_raises_diff_error() -> None:
 
     with pytest.raises(DiffError):
         parse_diff(broken)
+
+
+def test_line_text_gives_each_visible_lines_content_on_its_side() -> None:
+    parsed = parse_diff(REMOVED_LINES)
+
+    assert parsed.line_text("app/users.py", Side.OLD, 21) == "        anonymise(user)"
+    assert parsed.line_text("app/users.py", Side.OLD, 20) == "    def delete(self, user):"
+    assert parsed.line_text("app/users.py", Side.NEW, 20) == "    def delete(self, user):"
+    assert parsed.line_text("app/users.py", Side.NEW, 21) == "        user.delete()"
+
+
+def test_line_text_of_an_added_line() -> None:
+    parsed = parse_diff(ADDED_LINES)
+
+    assert (
+        parsed.line_text("app/views.py", Side.NEW, 12) == '    logger.info("signup %s", user.email)'
+    )
+
+
+def test_line_text_is_none_where_the_diff_shows_no_line() -> None:
+    parsed = parse_diff(ADDED_LINES)
+
+    assert parsed.line_text("app/views.py", Side.NEW, 99) is None
+    assert parsed.line_text("app/views.py", Side.OLD, 15) is None
+    assert parsed.line_text("app/other.py", Side.NEW, 12) is None

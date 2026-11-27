@@ -18,13 +18,21 @@ class DiffError(ValueError):
 
 
 _LineIndex = dict[tuple[str, Side], frozenset[int]]
+_LineTexts = dict[tuple[str, Side, int], str]
 
 
 class ParsedDiff:
-    def __init__(self, files: frozenset[str], changed: _LineIndex, visible: _LineIndex) -> None:
+    def __init__(
+        self,
+        files: frozenset[str],
+        changed: _LineIndex,
+        visible: _LineIndex,
+        texts: _LineTexts | None = None,
+    ) -> None:
         self.files = files
         self._changed = changed
         self._visible = visible
+        self._texts = texts or {}
 
     def changed_lines(self, file: str, side: Side) -> frozenset[int]:
         """Lines added (NEW side) or removed (OLD side) in this file."""
@@ -33,6 +41,10 @@ class ParsedDiff:
     def visible_lines(self, file: str, side: Side) -> frozenset[int]:
         """Changed lines plus the context lines shown around them."""
         return self._visible.get((file, side), frozenset())
+
+    def line_text(self, file: str, side: Side, line: int) -> str | None:
+        """The content of a visible line, without its newline; None if the diff doesn't show it."""
+        return self._texts.get((file, side, line))
 
 
 def parse_diff(text: str) -> ParsedDiff:
@@ -43,6 +55,7 @@ def parse_diff(text: str) -> ParsedDiff:
 
     changed: defaultdict[tuple[str, Side], set[int]] = defaultdict(set)
     visible: defaultdict[tuple[str, Side], set[int]] = defaultdict(set)
+    texts: _LineTexts = {}
     files: set[str] = set()
 
     for patched_file in patch:
@@ -50,19 +63,23 @@ def parse_diff(text: str) -> ParsedDiff:
         files.add(path)
         for hunk in patched_file:
             for line in hunk:
+                text = line.value.rstrip("\r\n")
                 if line.is_added:
                     changed[path, Side.NEW].add(line.target_line_no)
                 if line.is_removed:
                     changed[path, Side.OLD].add(line.source_line_no)
                 if line.target_line_no is not None:
                     visible[path, Side.NEW].add(line.target_line_no)
+                    texts[path, Side.NEW, line.target_line_no] = text
                 if line.source_line_no is not None:
                     visible[path, Side.OLD].add(line.source_line_no)
+                    texts[path, Side.OLD, line.source_line_no] = text
 
     return ParsedDiff(
         files=frozenset(files),
         changed={key: frozenset(lines) for key, lines in changed.items()},
         visible={key: frozenset(lines) for key, lines in visible.items()},
+        texts=texts,
     )
 
 
