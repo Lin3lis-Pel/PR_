@@ -59,6 +59,33 @@ _Avoid_: type, rule
 Which version of a file a line number refers to: new (after the change) or old (before it).
 _Avoid_: LEFT/RIGHT (GitHub's names, used only at the GitHub edge)
 
+**Shown finding**:
+A finding at or above its config's threshold. Only shown findings reach a pull request;
+results files keep every finding.
+_Avoid_: filtered finding, visible finding
+
+**Posted finding**:
+A shown finding sent to a pull request as an inline comment. A shown finding the diff does
+not show, or one over the comment limit, is listed in the review body instead.
+_Avoid_: comment (that is the GitHub object, not the finding), published finding
+
+**Fingerprint**:
+What makes two findings the same risk across pushes: the file, the category and the
+content of the line, not its number. A finding whose fingerprint is already on the pull
+request is not posted again.
+_Avoid_: finding id, hash (that is its form, not its meaning)
+
+## Running the reviewer
+
+**Service**:
+The hosted reviewer: it takes a diff and returns shown findings, and never talks to GitHub.
+_Avoid_: API, server, backend
+
+**Action**:
+The GitHub Action that reviews a pull request: it sends the diff to the service and posts
+the findings as one review.
+_Avoid_: bot, workflow (the repo's file that runs the Action), integration
+
 ## Scoring
 
 **Hit**:
